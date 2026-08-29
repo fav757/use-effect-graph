@@ -1,0 +1,118 @@
+.panel {
+  min-height: 34rem;
+  padding: 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.heading,
+.profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.heading h2,
+.kicker {
+  margin: 0;
+}
+.heading h2 {
+  color: var(--text-strong);
+  font-size: 1.45rem;
+}
+.kicker {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.heading button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-raised);
+}
+.empty {
+  display: grid;
+  min-height: 26rem;
+  place-content: center;
+  color: var(--text-muted);
+  text-align: center;
+}
+.empty span {
+  color: var(--accent);
+  font-size: 2.2rem;
+}
+.profile {
+  margin: 1.4rem 0 1rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--accent-soft);
+}
+.profile div {
+  display: grid;
+  gap: 0.25rem;
+}
+.profile span,
+.updated {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.profile select {
+  width: auto;
+  min-height: 2.3rem;
+}
+.timeline {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.timeline li > span {
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.25rem;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: #7c8a82;
+  box-shadow: 0 0 0 2px #7c8a82;
+}
+.timeline li[data-kind='security'] > span {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.timeline div {
+  display: grid;
+  gap: 0.3rem;
+}
+.timeline time {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+.loading,
+.updated {
+  margin: 1rem 0 0;
+}
+.loading {
+  color: var(--text-muted);
+}
+
+@media (max-width: 430px) {
+  .profile {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .profile select {
+    width: 100%;
+  }
+}

@@ -1,13 +1,99 @@
 .app {
-  display: grid;
-  gap: 1.25rem;
-  min-height: 100vh;
-  place-content: center;
-  padding: 2rem;
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3.5rem 0 5rem;
 }
 
-.app h1 {
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+.header h1 {
   margin: 0;
-  font-size: clamp(2rem, 7vw, 4rem);
-  line-height: 1.1;
+  color: var(--text-strong);
+  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+.eyebrow,
+.subtitle {
+  margin: 0;
+}
+.eyebrow {
+  margin-bottom: 0.65rem;
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.subtitle {
+  margin-top: 1rem;
+  color: var(--text-muted);
+}
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+.connection span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #e15d5d;
+}
+.connection[data-online='true'] span {
+  background: #38a169;
+  box-shadow: 0 0 0 4px rgb(56 161 105 / 14%);
+}
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.35fr);
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.toolbar label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(20rem, 0.88fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 780px) {
+  .app {
+    padding-top: 2rem;
+  }
+  .header,
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .connection {
+    justify-self: start;
+  }
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
 }

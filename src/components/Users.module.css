@@ -1,4 +1,118 @@
-.usersStatus {
+.directory {
+  min-height: 34rem;
+  padding: 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.heading,
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.heading {
+  margin-bottom: 1.25rem;
+}
+.heading h2,
+.kicker {
   margin: 0;
-  color: #52606d;
+}
+.heading h2 {
+  color: var(--text-strong);
+  font-size: 1.45rem;
+}
+.heading > span,
+.kicker {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.list {
+  display: grid;
+  gap: 0.6rem;
+}
+.user {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  background: transparent;
+  text-align: left;
+}
+.user:hover {
+  background: var(--surface-raised);
+}
+.user[data-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.avatar {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: #263b30;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.identity,
+.metadata {
+  display: grid;
+  gap: 0.25rem;
+}
+.identity small,
+.metadata small {
+  overflow: hidden;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.metadata {
+  justify-items: end;
+}
+.metadata span {
+  padding: 0.18rem 0.48rem;
+  border-radius: 999px;
+  background: #e8ecdf;
+  color: #59614e;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+.metadata span[data-status='active'] {
+  background: #ddf4e5;
+  color: #247246;
+}
+.metadata span[data-status='suspended'] {
+  background: #f8dfdc;
+  color: #9b3d34;
+}
+.message {
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.pagination {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+.pagination button {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-raised);
 }
