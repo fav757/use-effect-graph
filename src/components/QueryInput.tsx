@@ -1,4 +1,5 @@
 import type { ChangeEvent } from 'react'
+import styles from './QueryInput.module.css'
 
 interface QueryInputProps {
   query: string
@@ -11,7 +12,7 @@ export function QueryInput({ query, onQueryChange }: QueryInputProps) {
   }
 
   return (
-    <label className="query-input">
+    <label className={styles.queryInput}>
       Search users
       <input
         type="search"

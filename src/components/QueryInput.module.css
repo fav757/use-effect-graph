@@ -1,0 +1,13 @@
+.queryInput {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.queryInput input {
+  min-width: min(24rem, 80vw);
+  padding: 0.75rem;
+  border: 1px solid #aab4c0;
+  border-radius: 0.375rem;
+  font: inherit;
+}

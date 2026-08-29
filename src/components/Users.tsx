@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import styles from './Users.module.css'
 
 interface UsersProps {
   query: string
@@ -18,7 +19,7 @@ export function Users({ query }: UsersProps) {
   }, [debouncedQuery])
 
   return (
-    <p className="users-status">
+    <p className={styles.usersStatus}>
       Current debounced query: {debouncedQuery || 'None'}
     </p>
   )
