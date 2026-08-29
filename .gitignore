@@ -13,3 +13,7 @@ dist
 *.njsproj
 *.sln
 *.sw?
+
+#CodeQL
+codeql-db/
+codeql-results.sarif
