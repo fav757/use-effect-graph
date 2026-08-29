@@ -4,25 +4,33 @@
 
 .app {
   display: grid;
+  gap: 1.25rem;
   min-height: 100vh;
   place-content: center;
   padding: 2rem;
-  text-align: center;
 }
 
 .app h1 {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: clamp(2rem, 7vw, 4rem);
   line-height: 1.1;
 }
 
-.app p {
-  margin: 0;
-  color: #52606d;
+.query-input {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
 }
 
-.app code {
-  padding: 0.15rem 0.35rem;
-  border-radius: 0.25rem;
-  background: #e4e9f0;
+.query-input input {
+  min-width: min(24rem, 80vw);
+  padding: 0.75rem;
+  border: 1px solid #aab4c0;
+  border-radius: 0.375rem;
+  font: inherit;
+}
+
+.users-status {
+  margin: 0;
+  color: #52606d;
 }
