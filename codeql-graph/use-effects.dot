@@ -1,0 +1,18 @@
+digraph UseEffects {
+  graph [rankdir=LR, bgcolor="#fafafa", pad="0.3", nodesep="0.5", ranksep="0.8"];
+  node [shape=box, style="rounded,filled", fillcolor="#e8f0fe", color="#5f6f89", fontname="Segoe UI"];
+  edge [color="#708090", arrowsize="0.8"];
+  "-16538147" [label="useEffect\nUsers.tsx:17", fillcolor="#fce8b2", URL="file://E:/study/use-effect-graph/src/components/Users.tsx:17:3:19:22"];
+  "-16538159" [label="query\nUsers.tsx:14", fillcolor="#e8f0fe", URL="file://E:/study/use-effect-graph/src/components/Users.tsx:14:25:14:29"];
+  "-16538008" [label="delay\nuseDebouncedValue.ts:3", fillcolor="#e8f0fe", URL="file://E:/study/use-effect-graph/src/hooks/useDebouncedValue.ts:3:48:3:52"];
+  "-16538153" [label="debouncedQuery\nUsers.tsx:15", fillcolor="#e8f0fe", URL="file://E:/study/use-effect-graph/src/components/Users.tsx:15:9:15:22"];
+  "-16538205" [label="useDebouncedValue\nUsers.tsx:2", fillcolor="#e8f0fe", URL="file://E:/study/use-effect-graph/src/components/Users.tsx:2:10:2:26"];
+  "-16537991" [label="useEffect\nuseDebouncedValue.ts:6", fillcolor="#fce8b2", URL="file://E:/study/use-effect-graph/src/hooks/useDebouncedValue.ts:6:3:14:20"];
+  "-16538009" [label="value\nuseDebouncedValue.ts:3", fillcolor="#e8f0fe", URL="file://E:/study/use-effect-graph/src/hooks/useDebouncedValue.ts:3:38:3:42"];
+  "-16538153" -> "-16538205";
+  "-16538153" -> "-16538159";
+  "-16538147" -> "-16538153";
+  "-16537991" -> "-16538009";
+  "-16537991" -> "-16538008";
+}
+
