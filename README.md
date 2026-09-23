@@ -203,8 +203,9 @@ powershell -ExecutionPolicy Bypass -File codeql-graph\render-graph.ps1
 ```
 
 The renderer reads `edges.csv` and produces DOT, SVG, PNG, and standalone HTML.
-Nodes are grouped by source file; purple cards identify effects and blue cards
-identify dependencies. Arrows point from an effect or value to its dependencies.
+Nodes are grouped by source file; purple cards identify effects, teal cards
+identify hook references (names matching `use` followed by an uppercase letter or
+digit), and blue cards identify other dependencies. Arrows point from an effect or value to its dependencies.
 The HTML viewer includes graph counts, a legend, zoom controls, and export links.
 
 Open `codeql-graph/use-effects.html` in a browser. Customize graph styling in

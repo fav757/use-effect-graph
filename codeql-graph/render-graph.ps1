@@ -1,4 +1,4 @@
-﻿param([string]$OutputDirectory = $PSScriptRoot)
+param([string]$OutputDirectory = $PSScriptRoot)
 $ErrorActionPreference = 'Stop'
 $rows = @(Import-Csv (Join-Path $OutputDirectory 'edges.csv') -Header parentId,parentLabel,parentUrl,childId,childLabel,childUrl)
 $nodes = @{}
@@ -29,6 +29,7 @@ foreach ($file in ($groups.Keys | Sort-Object)) {
   foreach ($node in ($groups[$file] | Sort-Object Line,Label)) {
     $fill = '#f0f5ff'; $stroke = '#c8d8f3'; $ink = '#254b82'
     if ($node.Effect) { $fill = '#ede9fe'; $stroke = '#c4b5fd'; $ink = '#5b36a8' }
+    elseif ($node.Label -cmatch '^use[A-Z0-9]') { $fill = '#e6f7f2'; $stroke = '#99d6c5'; $ink = '#176b57' }
     $label = [System.Net.WebUtility]::HtmlEncode($node.Label)
     $lines.Add(('"{0}" [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT"><FONT COLOR="{1}"><B>{2}</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT COLOR="#738199" POINT-SIZE="10">line {3}</FONT></TD></TR></TABLE>>, fillcolor="{4}", color="{5}", URL="{6}", tooltip="{7}:{3}"];' -f $node.Id,$ink,$label,$node.Line,$fill,$stroke,(Escape-Dot $node.Url),(Escape-Dot $file)))
   }
