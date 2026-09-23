@@ -47,7 +47,9 @@ Graph generation has four distinct stages:
 source code -> CodeQL database -> BQRS results -> DOT -> HTML/SVG/PNG
 ```
 
-Run all commands below from the repository root.
+Run all commands below from the repository root. Databases belong under
+`codeql-db/` (ignored by Git); graph data and rendered outputs belong under
+`codeql-graph/`.
 
 ### 1. Create a current CodeQL database
 
@@ -56,14 +58,14 @@ source edits into an existing database. Recreate the database after changing
 the application:
 
 ```powershell
-codeql database create codeql-graph\current-db `
+codeql database create codeql-db\current-db `
   --language=javascript-typescript `
   --source-root=. `
   --overwrite
 ```
 
 `--overwrite` replaces only the generated database at
-`codeql-graph/current-db`. For JavaScript/TypeScript, CodeQL runs its extractor;
+`codeql-db/current-db`. For JavaScript/TypeScript, CodeQL runs its extractor;
 this does not run the project's `npm run build` command.
 
 ### 2. Run the query
@@ -71,7 +73,7 @@ this does not run the project's `npm run build` command.
 ```powershell
 codeql query run `
   codeql-queries\codeql-custom-queries-javascript\example.ql `
-  --database=codeql-graph\current-db `
+  --database=codeql-db\current-db `
   --output=codeql-graph\use-effects.bqrs
 ```
 
@@ -235,7 +237,7 @@ Error initializing the IMB disk cache: the cache directory is already locked
 ```
 
 Remove or deselect the database in the CodeQL sidebar, close the relevant VS Code
-window, or use a separate database path such as `codeql-graph/current-db`. Do not
+window, or use a separate database path such as `codeql-db/current-db`. Do not
 delete the `.lock` file while a CodeQL query server is active.
 
 ## Current output files
