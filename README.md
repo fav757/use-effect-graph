@@ -83,7 +83,7 @@ codeql bqrs info codeql-graph\use-effects.bqrs
 
 The `#select` result-set row count is the number of graph edges.
 
-### 3. Convert BQRS edges to Graphviz DOT
+### 3. Decode BQRS edges to CSV
 
 First decode the selected edges with all entity information:
 
@@ -95,6 +95,22 @@ codeql bqrs decode codeql-graph\use-effects.bqrs `
   --no-titles `
   --output=codeql-graph\edges.csv
 ```
+
+### 4. Choose a generation option
+
+Both options use the same `edges.csv` from step 3 and preserve the same nodes
+and connections. Choose either option after decoding the query results.
+
+| Option | Appearance | Generation |
+| --- | --- | --- |
+| Classic (original) | Ungrouped graph, yellow effects, blue dependencies, simple HTML wrapper | PowerShell commands below and Graphviz |
+| Styled (new) | Source-file groups, purple effects, legend, counts, zoom controls, export links | `render-graph.ps1` and `viewer-template.html` |
+
+Both options write `codeql-graph/use-effects.dot`, `.svg`, `.png`, and `.html`.
+Running either option replaces those rendered files with the selected design.
+You can switch designs by running the other option without rerunning CodeQL.
+
+#### Option A: Classic (original)
 
 Then create the labeled DOT graph:
 
@@ -148,7 +164,7 @@ ASCII output is intentional. Windows PowerShell's UTF-8 encoding can add a byte
 order mark that some Graphviz versions reject with a syntax error near
 `digraph`.
 
-### 4. Render the visual formats
+#### Render the classic visual formats
 
 SVG:
 
@@ -176,6 +192,24 @@ Remove-Item -LiteralPath codeql-graph\use-effects-inline.svg
 
 Open `codeql-graph/use-effects.html` in a browser.
 
+#### Option B: Styled (new)
+
+Render the grouped graph and all visual formats with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File codeql-graph\render-graph.ps1
+```
+
+The renderer reads `edges.csv` and produces DOT, SVG, PNG, and standalone HTML.
+Nodes are grouped by source file; purple cards identify effects and blue cards
+identify dependencies. Arrows point from an effect or value to its dependencies.
+The HTML viewer includes graph counts, a legend, zoom controls, and export links.
+
+Open `codeql-graph/use-effects.html` in a browser. Customize graph styling in
+`codeql-graph/render-graph.ps1` and the viewer in
+`codeql-graph/viewer-template.html`, then rerun the renderer. The script writes
+DOT as UTF-8 without a byte order mark for Graphviz compatibility.
+
 ## Why `dot` alone does not update the graph
 
 This command only renders the DOT file that already exists:
@@ -185,7 +219,7 @@ dot -Tsvg codeql-graph\use-effects.dot -o codeql-graph\use-effects.svg
 ```
 
 It does not read the application, the CodeQL database, or the BQRS file. If only
-the BQRS timestamp changed, `use-effects.dot` is still stale until stage 3 is
+the BQRS timestamp changed, `use-effects.dot` is still stale until stages 3 and 4 are
 run.
 
 Likewise, `codeql query run` reads a database snapshot. It does not detect source
