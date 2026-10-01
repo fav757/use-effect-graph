@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useStableCallback } from '../hooks/useStableCallback'
 import styles from './SettingsPanel.module.css'
 
 interface SettingsPanelProps {
@@ -26,14 +27,17 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
 
+  const closeSettings = useStableCallback(() => {
+    if (isOpen) setIsOpen(false)
+  })
+
   useEffect(() => {
-    if (!isOpen) return
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsOpen(false)
+      if (event.key === 'Escape') closeSettings()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen])
+  }, [closeSettings])
 
   return (
     <aside className={styles.settings} data-open={isOpen}>
@@ -41,7 +45,7 @@ export function SettingsPanel({
         className={styles.toggle}
         type="button"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={isOpen ? closeSettings : () => setIsOpen(true)}
       >
         {isOpen ? 'Close settings' : 'Dashboard settings'}
       </button>

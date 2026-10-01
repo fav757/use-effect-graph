@@ -1,9 +1,9 @@
 # use-effect-graph
 
 This project contains a custom CodeQL graph query for React `useEffect`
-dependencies. The query finds `useEffect` calls with array-literal dependency
-lists, adds the variables referenced by each array entry, and recursively follows
-variables referenced by their assigned expressions.
+dependencies and callback patterns. The query finds `useEffect` calls with
+array-literal dependency lists, follows the variables referenced by each entry,
+and shows Effect Events and stable callbacks on separate paths.
 
 For example:
 
@@ -24,6 +24,24 @@ useEffect -> request -> makeRequest
 
 The query is located at
 `codeql-queries/codeql-custom-queries-javascript/example.ql`.
+
+## Callback examples in the dashboard
+
+- `ActivityFeed` uses `useEffectEvent` for its automatic refresh timer. Each tick
+  reads the latest loading state so it skips an overlapping fetch, and records
+  the filter active when that refresh was requested. Changing the filter or
+  loading state does not restart the timer.
+- `SettingsPanel` uses the local `useStableCallback` hook for closing settings
+  by button or Escape. The key listener remains attached while the callback
+  reads the latest open state. The hook keeps one function identity and updates
+  its callback ref in a layout effect after each callback change.
+
+In the styled graph, a solid line from an effect is a dependency or source
+relationship. A dotted line means the effect invokes an Effect Event. A dashed
+line from either callback hook shows a captured value read by its callback;
+those values do not become effect dependencies just because the callback reads
+them. `useEffectEvent` is called only from the timer effect and is omitted from
+its dependency list.
 
 ## Prerequisites
 
@@ -105,8 +123,8 @@ and connections. Choose either option after decoding the query results.
 
 | Option | Appearance | Generation |
 | --- | --- | --- |
-| Classic (original) | Ungrouped graph, yellow effects, blue dependencies, simple HTML wrapper | PowerShell commands below and Graphviz |
-| Styled (new) | Source-file groups, purple effects, legend, counts, zoom controls, export links | `render-graph.ps1` and `viewer-template.html` |
+| Classic (original) | Ungrouped graph with basic node colors and no callback edge styles | PowerShell commands below and Graphviz |
+| Styled (recommended) | Source-file groups, distinct callback paths, legend, counts, zoom controls, export links | `render-graph.ps1` and `viewer-template.html` |
 
 Both options write `codeql-graph/use-effects.dot`, `.svg`, `.png`, and `.html`.
 Running either option replaces those rendered files with the selected design.
@@ -140,9 +158,19 @@ foreach ($entry in $nodes.GetEnumerator()) {
   $fileName = $parts[0]
   $line = $parts[1]
 
-  if ($rawLabel.StartsWith('useEffe')) {
+  $sourcePath = ([uri]($url -replace ':\d+:\d+:\d+:\d+$', '')).LocalPath
+  $sourceLine = (Get-Content -LiteralPath $sourcePath)[([int]$parts[1]) - 1]
+  $callText = $sourceLine.Substring(([int]$parts[2]) - 1)
+
+  if ($callText -match '^useEffect\s*\(') {
     $label = 'useEffect'
     $fill = '#fce8b2'
+  } elseif ($callText -match '^useEffectEvent\s*\(') {
+    $label = 'useEffectEvent'
+    $fill = '#fff3df'
+  } elseif ($callText -match '^useStableCallback\s*\(') {
+    $label = 'useStableCallback'
+    $fill = '#e6f7f2'
   } else {
     $label = $rawLabel.Replace('"', '\"')
     $fill = '#e8f0fe'
@@ -203,9 +231,12 @@ powershell -ExecutionPolicy Bypass -File codeql-graph\render-graph.ps1
 ```
 
 The renderer reads `edges.csv` and produces DOT, SVG, PNG, and standalone HTML.
-Nodes are grouped by source file; purple cards identify effects, teal cards
-identify hook references (names matching `use` followed by an uppercase letter or
-digit), and blue cards identify other dependencies. Arrows point from an effect or value to its dependencies.
+Nodes are grouped by source file. Purple cards identify effects, amber cards
+identify Effect Events, teal cards identify stable callbacks or hook references,
+and blue cards identify values. Solid edges show dependencies and source values,
+dotted edges show Effect Event invocations, and dashed edges show callback
+captures. Hook calls are classified by their exact source position, so
+`useEffectEvent` is never counted as `useEffect`.
 The HTML viewer includes graph counts, a legend, zoom controls, and export links.
 
 Open `codeql-graph/use-effects.html` in a browser. Customize graph styling in
@@ -255,7 +286,12 @@ The generation process creates:
 ## Query scope and limitations
 
 - Only calls whose callee name is `useEffect` and whose second argument is an
-  array literal are included.
+  array literal are included as effect roots.
+- Callback paths cover local variables assigned directly from `useEffectEvent`
+  or `useStableCallback`. Effect Events must be called inside a detected effect;
+  stable callbacks must be reachable from an effect dependency.
+- Callback capture edges exclude variables declared inside the callback. They
+  are separate from the recursive effect dependency traversal.
 - Entries such as `[object.property]` and `[a + b]` include every variable
   reference found inside the entry expression.
 - Source traversal is transitive through assigned expressions. Nested calls,

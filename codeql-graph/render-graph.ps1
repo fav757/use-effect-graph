@@ -8,15 +8,26 @@ foreach ($row in $rows) {
 }
 function Escape-Dot([string]$Value) { $Value.Replace('\', '\\').Replace('"', '\"') }
 $groups = @{}
+$nodeKinds = @{}
+$sourceLines = @{}
 $effectCount = 0
 foreach ($id in $nodes.Keys) {
   $label, $url = $nodes[$id]
   $location = ($url -split '/')[-1] -split ':'
   $file = $location[0]
   if (-not $groups.ContainsKey($file)) { $groups[$file] = @() }
-  $effect = $label.StartsWith('useEffe')
-  if ($effect) { $label = 'useEffect'; $effectCount++ }
-  $groups[$file] += [pscustomobject]@{ Id=$id; Label=$label; Url=$url; Line=[int]$location[1]; Effect=$effect }
+  $sourcePath = ([uri]($url -replace ':\d+:\d+:\d+:\d+$', '')).LocalPath
+  if (-not $sourceLines.ContainsKey($sourcePath)) {
+    $sourceLines[$sourcePath] = @(Get-Content -LiteralPath $sourcePath)
+  }
+  $sourceLine = $sourceLines[$sourcePath][([int]$location[1]) - 1]
+  $callText = $sourceLine.Substring(([int]$location[2]) - 1)
+  $kind = 'dependency'
+  if ($callText -match '^useEffectEvent\s*\(') { $kind = 'event'; $label = 'useEffectEvent' }
+  elseif ($callText -match '^useStableCallback\s*\(') { $kind = 'stable'; $label = 'useStableCallback' }
+  elseif ($callText -match '^useEffect\s*\(') { $kind = 'effect'; $label = 'useEffect'; $effectCount++ }
+  $nodeKinds[$id] = $kind
+  $groups[$file] += [pscustomobject]@{ Id=$id; Label=$label; Url=$url; Line=[int]$location[1]; Kind=$kind }
 }
 $lines = [System.Collections.Generic.List[string]]::new()
 $lines.Add('digraph UseEffects {')
@@ -28,7 +39,9 @@ foreach ($file in ($groups.Keys | Sort-Object)) {
   $lines.Add(('subgraph cluster_{0} {{ label="{1}"; labeljust=l; style="rounded,filled"; color="#dce3ee"; fillcolor="white"; margin=24;' -f $index, (Escape-Dot $file)))
   foreach ($node in ($groups[$file] | Sort-Object Line,Label)) {
     $fill = '#f0f5ff'; $stroke = '#c8d8f3'; $ink = '#254b82'
-    if ($node.Effect) { $fill = '#ede9fe'; $stroke = '#c4b5fd'; $ink = '#5b36a8' }
+    if ($node.Kind -eq 'effect') { $fill = '#ede9fe'; $stroke = '#c4b5fd'; $ink = '#5b36a8' }
+    elseif ($node.Kind -eq 'event') { $fill = '#fff3df'; $stroke = '#e7b768'; $ink = '#975700' }
+    elseif ($node.Kind -eq 'stable') { $fill = '#e6f7f2'; $stroke = '#99d6c5'; $ink = '#176b57' }
     elseif ($node.Label -cmatch '^use[A-Z0-9]') { $fill = '#e6f7f2'; $stroke = '#99d6c5'; $ink = '#176b57' }
     $label = [System.Net.WebUtility]::HtmlEncode($node.Label)
     $lines.Add(('"{0}" [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT"><FONT COLOR="{1}"><B>{2}</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT COLOR="#738199" POINT-SIZE="10">line {3}</FONT></TD></TR></TABLE>>, fillcolor="{4}", color="{5}", URL="{6}", tooltip="{7}:{3}"];' -f $node.Id,$ink,$label,$node.Line,$fill,$stroke,(Escape-Dot $node.Url),(Escape-Dot $file)))
@@ -36,7 +49,16 @@ foreach ($file in ($groups.Keys | Sort-Object)) {
   $lines.Add('}')
   $index++
 }
-foreach ($row in $rows) { $lines.Add(('"{0}" -> "{1}";' -f $row.parentId,$row.childId)) }
+foreach ($row in $rows) {
+  $style = ''
+  if ($nodeKinds[$row.parentId] -in @('event', 'stable')) {
+    $style = ' [style=dashed, color="#c48336"]'
+  }
+  elseif ($nodeKinds[$row.parentId] -eq 'effect' -and $nodeKinds[$row.childId] -eq 'event') {
+    $style = ' [style=dotted, color="#c48336"]'
+  }
+  $lines.Add(('"{0}" -> "{1}"{2};' -f $row.parentId,$row.childId,$style))
+}
 $lines.Add('}')
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $dotPath = Join-Path $OutputDirectory 'use-effects.dot'
@@ -45,9 +67,9 @@ foreach ($format in @('svg', 'png')) {
   & dot "-T$format" $dotPath -o (Join-Path $OutputDirectory "use-effects.$format")
   if ($LASTEXITCODE -ne 0) { throw "Graphviz failed to render $format" }
 }
-$svg = Get-Content -Raw (Join-Path $OutputDirectory 'use-effects.svg')
+$svg = Get-Content -Raw -Encoding UTF8 (Join-Path $OutputDirectory 'use-effects.svg')
 $svg = $svg.Substring($svg.IndexOf('<svg'))
-$template = Get-Content -Raw (Join-Path $PSScriptRoot 'viewer-template.html')
+$template = Get-Content -Raw -Encoding UTF8 (Join-Path $PSScriptRoot 'viewer-template.html')
 $html = $template.Replace('{{GRAPH}}', $svg).Replace('{{EFFECTS}}', [string]$effectCount).Replace('{{NODES}}', [string]$nodes.Count).Replace('{{EDGES}}', [string]$rows.Count).Replace('{{FILES}}', [string]$groups.Count)
 [System.IO.File]::WriteAllText((Join-Path $OutputDirectory 'use-effects.html'), $html, $utf8)
 Write-Output "Rendered $($nodes.Count) nodes and $($rows.Count) edges across $($groups.Count) files."

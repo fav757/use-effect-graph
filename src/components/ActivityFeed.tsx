@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { fetchActivity } from '../data/mockApi'
 import type { Activity, ActivityKind, User } from '../types'
 import styles from './ActivityFeed.module.css'
@@ -20,12 +20,23 @@ export function ActivityFeed({
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [lastAutoRefreshFilter, setLastAutoRefreshFilter] = useState<
+    ActivityKind | 'all' | null
+  >(null)
+  const userId = user?.id
+
+  const onAutoRefresh = useEffectEvent(() => {
+    if (isLoading) return
+    setLastAutoRefreshFilter(kind)
+    setRefreshVersion((current) => current + 1)
+  })
 
   useEffect(() => {
     setKind('all')
     setActivity([])
     setLastUpdated(null)
-  }, [user?.id])
+    setLastAutoRefreshFilter(null)
+  }, [userId])
 
   useEffect(() => {
     if (!user) return
@@ -57,13 +68,13 @@ export function ActivityFeed({
   }, [activity, kind])
 
   useEffect(() => {
-    if (!autoRefresh || !user) return
+    if (!autoRefresh || userId == null) return
     const intervalId = window.setInterval(() => {
-      setRefreshVersion((current) => current + 1)
+      onAutoRefresh()
     }, refreshSeconds * 1000)
 
     return () => window.clearInterval(intervalId)
-  }, [autoRefresh, refreshSeconds, user])
+  }, [autoRefresh, refreshSeconds, userId])
 
   return (
     <section className={styles.panel} aria-labelledby="activity-title">
@@ -138,6 +149,8 @@ export function ActivityFeed({
               ? `Updated at ${lastUpdated.toLocaleTimeString()}`
               : 'Waiting for activity'}
             {autoRefresh && ` · refreshes every ${refreshSeconds}s`}
+            {lastAutoRefreshFilter !== null &&
+              ` · last automatic refresh requested while viewing ${lastAutoRefreshFilter === 'all' ? 'all events' : `${lastAutoRefreshFilter} events`}`}
           </p>
         </>
       )}
