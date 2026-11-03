@@ -560,53 +560,103 @@ export function exportResult(
   }
 }
 export function toDot(result: Result) {
-  const quote = (value: string) =>
-    JSON.stringify(value).replace(/</g, '\\<').replace(/>/g, '\\>')
+  const quote = (value: string) => JSON.stringify(value)
+  const html = (value: string) =>
+    value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+  const compact = (value: string) => {
+    const text = value.replace(/\s+/g, ' ').trim()
+    return text.length > 48 ? text.slice(0, 45) + '…' : text
+  }
   const lines = [
     'digraph Provenance {',
-    'graph [rankdir=LR, bgcolor="#f5f7fb"];',
-    'node [shape=box, style="rounded,filled", fillcolor="#f0f5ff", fontname="Segoe UI"];',
+    'graph [rankdir=LR, bgcolor="#f8fafc", pad="0.45", nodesep="0.35", ranksep="0.65", outputorder=edgesfirst];',
+    'node [shape=box, style="rounded,filled", fillcolor="white", color="#dce2ec", penwidth=1.2, margin="0.18,0.13", fontname="Segoe UI", fontsize=12];',
+    'edge [color="#b3bfd2", arrowsize=0.6, penwidth=1.1, fontname="Segoe UI", fontsize=10, fontcolor="#64748b"];',
   ]
-  const effects = new Set(result.effects.map((e) => e.id))
+  const effects = new Map(result.effects.map((e) => [e.id, e]))
   for (const entity of result.entities) {
+    const effect = effects.get(entity.id)
+    const palette = effect
+      ? ['#f0edff', '#c7baf9', '#6750c5']
+      : entity.kind === 'react-state'
+        ? ['#ecf9f3', '#a9ddc7', '#1d8060']
+        : entity.kind === 'unknown-call'
+          ? ['#fff8e9', '#ead29f', '#a46b18']
+          : ['#ffffff', '#dce2ec', '#64748b']
+    const kind = effect
+      ? 'REACT EFFECT'
+      : entity.kind.replaceAll('-', ' ').toUpperCase()
+    const text = effect
+      ? 'useEffect (' + effect.mode + ')'
+      : compact(entity.expression || entity.label)
+    const file =
+      entity.location.file.split('/').at(-1) + ':' + entity.location.startLine
     const label =
-      (effects.has(entity.id)
-        ? 'useEffect (' +
-          result.effects.find((e) => e.id === entity.id)!.mode +
-          ')'
-        : entity.expression.slice(0, 100)) +
-      '\n' +
-      entity.location.file +
-      ':' +
-      entity.location.startLine
+      '<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2"><TR><TD ALIGN="LEFT"><FONT COLOR="' +
+      palette[2] +
+      '" POINT-SIZE="9">' +
+      html(kind) +
+      '</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT COLOR="#24324b"><B>' +
+      html(text) +
+      '</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT COLOR="#8692a7" POINT-SIZE="10">' +
+      html(file) +
+      '</FONT></TD></TR></TABLE>'
     lines.push(
       quote(entity.id) +
-        ' [label=' +
-        quote(label) +
-        ',fillcolor="' +
-        (effects.has(entity.id)
-          ? '#ede9fe'
-          : entity.kind === 'react-state'
-            ? '#e6f7f2'
-            : '#f0f5ff') +
-        '"];',
+        ' [label=<' +
+        label +
+        '>,fillcolor="' +
+        palette[0] +
+        '",color="' +
+        palette[1] +
+        '",tooltip=' +
+        quote(
+          entity.expression +
+            '\n' +
+            entity.location.file +
+            ':' +
+            entity.location.startLine,
+        ) +
+        '];',
     )
   }
-  for (const edge of result.edges)
+  for (const edge of result.edges) {
+    const annotation = ['closure-capture', 'hook-dependency'].includes(
+      edge.type,
+    )
+    const special = edge.type !== 'value-flow'
     lines.push(
       quote(edge.from) +
         ' -> ' +
         quote(edge.to) +
-        ' [label=' +
-        quote(edge.type) +
-        ',style=' +
+        ' [id=' +
+        quote(edge.id) +
+        ',tooltip=' +
+        quote(edge.type + '\n' + edge.rule) +
+        ',label=' +
+        quote(special ? edge.type.replaceAll('-', ' ') : '') +
+        ',color="' +
+        (annotation
+          ? '#c49a5e'
+          : edge.type.startsWith('state-')
+            ? '#65aa92'
+            : edge.type === 'effect-dependency'
+              ? '#9b88d5'
+              : '#b3bfd2') +
+        '",style=' +
         (edge.type === 'closure-capture'
           ? 'dashed'
           : edge.type === 'hook-dependency'
             ? 'dotted'
             : 'solid') +
+        (annotation ? ',constraint=false' : '') +
         '];',
     )
+  }
   lines.push('}')
   return lines.join('\n') + '\n'
 }

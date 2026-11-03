@@ -38,8 +38,16 @@ database path and stage timings. Query times include compilation and caching;
 they are measurements of that run rather than controlled benchmarks.
 Use `-SkipRender` without Graphviz.
 
-Open `codeql-graph/provenance/extended-state.html` for the zoomable graph and
-SVG/PNG downloads. Recreate the graph directly from JSON:
+Open `codeql-graph/provenance/extended-state.html` for the offline Effect
+explorer. Search by file or dependency, select a dependency and source, then
+expand a provenance path to inspect its code and transition evidence. Origins
+and intermediate interfaces have separate filters. Empty and unsupported
+dependency arrays remain visible in the navigation.
+
+The Graph overview tab highlights the selected dependency and provides zoom
+controls. The export menu links to the unchanged JSON and the full SVG/PNG
+graph. The viewer uses `analysis/viewer-template.html`; the original baseline
+viewer is preserved separately. Regenerate the report directly from JSON:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File analysis/render.ps1 `

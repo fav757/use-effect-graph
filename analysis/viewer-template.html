@@ -1,0 +1,2163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Effect explorer · Dependency provenance</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #253047;
+        --muted: #8490a5;
+        --line: #e8ebf2;
+        --purple: #7255d6;
+        --purple-soft: #f0ecff;
+        --green: #228268;
+        --amber: #af7d2b;
+        --mono: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f8f9fc;
+        color: var(--ink);
+        font:
+          14px/1.5 'Segoe UI',
+          system-ui,
+          sans-serif;
+      }
+      button,
+      input,
+      a,
+      summary {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      button,
+      a {
+        touch-action: manipulation;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      summary:focus-visible {
+        outline: 3px solid #baabf0;
+        outline-offset: 3px;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.4;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        color: inherit;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      button svg,
+      svg.icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        vertical-align: middle;
+      }
+      button {
+        border: 0;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        margin: 0;
+      }
+      button,
+      .source-card,
+      .trace-card {
+        transition:
+          background 0.16s,
+          border-color 0.16s,
+          box-shadow 0.16s;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 258px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .sidebar {
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-right: 1px solid var(--line);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 28px 23px 24px;
+        font-size: 17px;
+        font-weight: 650;
+        letter-spacing: -0.5px;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        background: var(--purple);
+        border-radius: 10px;
+        color: white;
+        box-shadow: 0 4px 10px #7255d626;
+      }
+      .brand-mark svg {
+        width: 22px;
+        height: 22px;
+      }
+      .brand small {
+        font-size: 10px;
+        margin-left: 3px;
+        color: #9ca4b5;
+        font-weight: 500;
+        letter-spacing: 0.6px;
+      }
+      .sidebar-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 23px;
+        color: #8b94a8;
+        font-size: 10px;
+        letter-spacing: 1.4px;
+        font-weight: 700;
+      }
+      .counter {
+        font-size: 11px;
+        letter-spacing: 0;
+        color: #78829a;
+        background: #f2f4f8;
+        padding: 1px 7px;
+        border-radius: 5px;
+      }
+      .search {
+        margin: 14px 17px 20px;
+        position: relative;
+      }
+      .search svg {
+        position: absolute;
+        left: 11px;
+        top: 11px;
+        color: #9ca6b7;
+        width: 16px;
+        height: 16px;
+      }
+      .search input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fafbfe;
+        padding: 9px 10px 9px 34px;
+        font-size: 12px;
+        color: var(--ink);
+      }
+      .search input::placeholder {
+        color: #9ca5b5;
+      }
+      .effect-list {
+        flex: 1;
+        overflow: auto;
+        padding: 0 12px 20px;
+        scrollbar-width: thin;
+        scrollbar-color: #d9deea transparent;
+      }
+      .file-group {
+        margin-bottom: 20px;
+      }
+      .file-name {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 10px;
+        margin-bottom: 7px;
+        color: #68768e;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .file-name svg {
+        width: 13px;
+        height: 13px;
+        color: #a1aaba;
+      }
+      .file-name span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .nav-effect {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 9px 11px;
+        margin: 3px 0;
+        position: relative;
+      }
+      .nav-effect:hover {
+        background: #f8f7fc;
+      }
+      .nav-effect.active {
+        border-color: #e8e0fd;
+        background: #f4f0ff;
+      }
+      .nav-effect.active:before {
+        position: absolute;
+        content: '';
+        left: -1px;
+        top: 11px;
+        bottom: 11px;
+        width: 3px;
+        background: var(--purple);
+        border-radius: 4px;
+      }
+      .nav-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 600;
+        color: #596780;
+      }
+      .nav-effect.active .nav-title {
+        color: #684bbd;
+      }
+      .nav-line {
+        font-size: 10px;
+        color: #9ba5b7;
+        font-weight: 400;
+      }
+      .nav-deps {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: #98a1b1;
+        margin-top: 3px;
+      }
+      .nav-effect.active .nav-deps {
+        color: #9c88cc;
+      }
+      .sidebar-bottom {
+        border-top: 1px solid var(--line);
+        margin: 0 18px;
+        padding: 17px 5px;
+        color: #96a0b1;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        background: #64b69a;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .workspace {
+        min-width: 0;
+        padding: 30px 38px 24px;
+        max-width: 1700px;
+        width: 100%;
+        margin: auto;
+      }
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #a0a8b8;
+        font-size: 10px;
+        letter-spacing: 1.4px;
+        font-weight: 600;
+        margin-bottom: 21px;
+      }
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .breadcrumb .current {
+        color: #707c92;
+      }
+      .top-status {
+        letter-spacing: 0;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+      }
+      .heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 26px;
+      }
+      h1 {
+        font-size: 28px;
+        letter-spacing: -1px;
+        font-weight: 650;
+      }
+      .subtitle {
+        color: #8b96a9;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      .exports {
+        position: relative;
+      }
+      .exports > summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        list-style: none;
+        cursor: pointer;
+        border: 1px solid #dfe4ed;
+        border-radius: 8px;
+        padding: 9px 13px;
+        background: white;
+        font-size: 11px;
+        font-weight: 600;
+        color: #66748a;
+      }
+      .exports > summary::-webkit-details-marker {
+        display: none;
+      }
+      .exports svg {
+        width: 15px;
+        height: 15px;
+      }
+      .export-menu {
+        position: absolute;
+        right: 0;
+        top: 44px;
+        z-index: 5;
+        width: 175px;
+        padding: 5px;
+        background: white;
+        border: 1px solid var(--line);
+        box-shadow: 0 10px 30px #25304715;
+        border-radius: 9px;
+      }
+      .export-menu a {
+        display: block;
+        padding: 9px;
+        border-radius: 5px;
+        font-size: 12px;
+      }
+      .export-menu a:hover {
+        background: #f5f2ff;
+        color: var(--purple);
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 25px;
+      }
+      .metric {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+      }
+      .metric-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: #f1edfd;
+        color: #9479db;
+      }
+      .metric:nth-child(2) .metric-icon {
+        background: #edf5ff;
+        color: #6e9bd1;
+      }
+      .metric:nth-child(3) .metric-icon {
+        background: #eef8f4;
+        color: #71ab96;
+      }
+      .metric:nth-child(4) .metric-icon {
+        background: #fbf5e9;
+        color: #c09e64;
+      }
+      .metric-icon svg {
+        width: 17px;
+        height: 17px;
+      }
+      .metric strong {
+        display: block;
+        font-size: 21px;
+        line-height: 1.2;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+      }
+      .metric span {
+        font-size: 10px;
+        color: #96a0b1;
+      }
+      .partial-note {
+        padding: 11px 15px;
+        border: 1px solid #efdeb9;
+        background: #fff9ed;
+        border-radius: 8px;
+        color: #99712a;
+        font-size: 12px;
+        margin-bottom: 20px;
+      }
+      .effect-panel {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 3px 10px #2b365004;
+        overflow: hidden;
+      }
+      .effect-header {
+        padding: 23px 25px 20px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+      .effect-kicker {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #8a94a8;
+        font-size: 10px;
+        margin-bottom: 9px;
+      }
+      .effect-kicker svg {
+        width: 13px;
+        height: 13px;
+        color: #a8a1bd;
+      }
+      .effect-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.4px;
+      }
+      .line-badge {
+        font-size: 10px;
+        color: #9aa4b4;
+        padding: 2px 7px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+      }
+      .effect-path {
+        font-size: 11px;
+        color: #a0a9b8;
+        margin-top: 6px;
+      }
+      .hook-tag {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: #9176ce;
+        background: #f6f2ff;
+        border: 1px solid #eee7fb;
+        padding: 5px 9px;
+        border-radius: 6px;
+      }
+      .dependency-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 25px;
+        background: #fcfcfe;
+        border-top: 1px solid #f0f1f7;
+        border-bottom: 1px solid var(--line);
+      }
+      .dependency-bar > span {
+        font-size: 10px;
+        color: #96a0b2;
+        white-space: nowrap;
+      }
+      .dependency-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .dependency {
+        padding: 5px 10px;
+        background: white;
+        border: 1px solid #e6e9f0;
+        border-radius: 6px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: #8a95a8;
+      }
+      .dependency small {
+        font:
+          9px 'Segoe UI',
+          sans-serif;
+        color: #bac1cf;
+        margin-right: 6px;
+      }
+      .dependency.selected {
+        background: #eee8fc;
+        border-color: #ded2f6;
+        color: #7554bd;
+      }
+      .dependency.selected small {
+        color: #ac96d8;
+      }
+      .view-tabs {
+        padding: 17px 25px 0;
+        display: flex;
+        align-items: center;
+        gap: 23px;
+        border-bottom: 1px solid var(--line);
+      }
+      .view-tab {
+        font-size: 11px;
+        color: #9aa4b6;
+        background: transparent;
+        padding: 0 0 13px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        border-bottom: 2px solid transparent;
+      }
+      .view-tab svg {
+        width: 14px;
+        height: 14px;
+      }
+      .view-tab.active {
+        color: #7555bf;
+        border-bottom-color: #9273dc;
+      }
+      .view-hint {
+        margin-left: auto;
+        font-size: 10px;
+        color: #a4adbd;
+        padding-bottom: 13px;
+      }
+      .trace-layout {
+        display: grid;
+        grid-template-columns: 265px minmax(0, 1fr);
+        min-height: 450px;
+      }
+      .origins {
+        border-right: 1px solid var(--line);
+        padding: 20px 16px;
+        background: #fdfdff;
+      }
+      .section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 4px;
+        margin-bottom: 5px;
+      }
+      h3 {
+        font-size: 12px;
+        font-weight: 600;
+        color: #5a6880;
+      }
+      .section-heading .count {
+        font-size: 10px;
+        color: #a6aebe;
+      }
+      .section-copy {
+        font-size: 10px;
+        color: #a1aabc;
+        padding: 0 4px;
+        line-height: 1.7;
+        margin-bottom: 14px;
+      }
+      .source-tabs {
+        display: flex;
+        gap: 3px;
+        padding: 3px;
+        background: #f0f2f7;
+        border-radius: 6px;
+        margin-bottom: 13px;
+      }
+      .source-tab {
+        font-size: 10px;
+        background: transparent;
+        color: #9aa4b6;
+        border-radius: 4px;
+        padding: 5px 6px;
+        flex: 1;
+      }
+      .source-tab.active {
+        background: white;
+        color: #6a57a5;
+        box-shadow: 0 1px 3px #1b2d4810;
+      }
+      .source-all {
+        width: 100%;
+        padding: 8px;
+        background: transparent;
+        text-align: left;
+        font-size: 10px;
+        color: #9d8abb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .source-all svg {
+        width: 13px;
+        height: 13px;
+      }
+      .source-all.active {
+        color: #7554bd;
+      }
+      .source-list {
+        display: grid;
+        gap: 8px;
+      }
+      .source-card {
+        display: block;
+        text-align: left;
+        width: 100%;
+        background: white;
+        border: 1px solid #e8ebf2;
+        border-radius: 8px;
+        padding: 11px;
+      }
+      .source-card:hover {
+        border-color: #cfc0eb;
+        background: #fbf9ff;
+      }
+      .source-card.active {
+        border-color: #bc9ee9;
+        background: #fbf8ff;
+        box-shadow: 0 0 0 2px #f6f0fe;
+      }
+      .source-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 7px;
+      }
+      .kind-dot {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #8e83c4;
+      }
+      .kind-dot.green {
+        background: #65a88e;
+      }
+      .kind-dot.amber {
+        background: #c59b5a;
+      }
+      .source-kind {
+        font-size: 9px;
+        color: #a1a9b8;
+      }
+      .source-count {
+        margin-left: auto;
+        font-size: 9px;
+        color: #bbc2ce;
+      }
+      .source-expression {
+        font-family: var(--mono);
+        color: #657087;
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+      }
+      .source-location {
+        font-size: 9px;
+        color: #a7b0c1;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .source-location svg {
+        width: 10px;
+        height: 10px;
+      }
+      .paths {
+        padding: 20px 23px;
+        min-width: 0;
+      }
+      .paths-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 5px;
+      }
+      .paths-heading > div {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .paths-heading .counter {
+        font-size: 9px;
+        background: #f4f1fa;
+        color: #a18abd;
+      }
+      .paths-caption {
+        font-size: 10px;
+        color: #a4adbc;
+        margin-bottom: 17px;
+      }
+      .trace-list {
+        display: grid;
+        gap: 9px;
+      }
+      .trace-card {
+        border: 1px solid #e7eaf1;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .trace-card[open] {
+        border-color: #d9cceb;
+      }
+      .trace-card > summary {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        list-style: none;
+        cursor: pointer;
+        padding: 13px;
+        background: #fff;
+      }
+      .trace-card > summary::-webkit-details-marker {
+        display: none;
+      }
+      .trace-card[open] > summary {
+        background: #fcfaff;
+        border-bottom: 1px solid #efeaf7;
+      }
+      .trace-icon {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: #f4f1fb;
+        color: #ac97cf;
+        flex-shrink: 0;
+      }
+      .trace-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .trace-name {
+        min-width: 0;
+        flex: 1;
+      }
+      .trace-name code {
+        font-size: 11px;
+        color: #6a748b;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .trace-name small {
+        display: block;
+        color: #b1b8c6;
+        font-size: 9px;
+        margin-top: 3px;
+      }
+      .step-count {
+        font-size: 9px;
+        white-space: nowrap;
+        color: #a7b0bf;
+        border: 1px solid #edf0f5;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+      .chevron {
+        width: 13px !important;
+        height: 13px !important;
+        color: #a9b1c0;
+        transition: transform 0.15s;
+      }
+      .trace-card[open] .chevron {
+        transform: rotate(90deg);
+      }
+      .trace-steps {
+        padding: 16px 17px 4px;
+        max-height: 440px;
+        overflow: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #dce0eb transparent;
+      }
+      .step {
+        position: relative;
+        padding: 0 0 18px 31px;
+        min-height: 60px;
+      }
+      .step:before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 20px;
+        bottom: 0;
+        width: 1px;
+        background: #e5e0ef;
+      }
+      .step:last-child:before {
+        display: none;
+      }
+      .step-number {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #f6f2fc;
+        border: 1px solid #e9dff5;
+        font-size: 9px;
+        color: #a48cc8;
+      }
+      .step-heading {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        color: #9d8fb1;
+        font-size: 9px;
+        margin-bottom: 5px;
+      }
+      .step-file {
+        margin-left: auto;
+        color: #a8b1c2;
+      }
+      .step code {
+        font-size: 10px;
+        color: #65718a;
+        background: #fafbfe;
+        border: 1px solid #edf0f5;
+        border-radius: 5px;
+        padding: 7px 9px;
+        display: block;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .step-proof {
+        margin-top: 5px;
+        font-size: 9px;
+        color: #a8b2c3;
+      }
+      .step-proof > summary {
+        cursor: pointer;
+        display: inline;
+        list-style: none;
+      }
+      .step-proof > div {
+        padding: 6px 0;
+        color: #8c98ac;
+        overflow-wrap: anywhere;
+      }
+      .load-more {
+        width: 100%;
+        margin-top: 13px;
+        border: 1px dashed #e0d8ed;
+        border-radius: 6px;
+        padding: 9px;
+        background: #fdfbff;
+        color: #a18dbb;
+        font-size: 10px;
+      }
+      .notes {
+        border-top: 1px solid var(--line);
+        padding: 13px 25px;
+        color: #a1aabc;
+        font-size: 10px;
+      }
+      .notes summary {
+        cursor: pointer;
+        color: #a397b5;
+        list-style: none;
+      }
+      .notes summary svg {
+        width: 12px;
+        height: 12px;
+        margin-right: 5px;
+      }
+      .notes-content {
+        padding-top: 10px;
+        display: grid;
+        gap: 6px;
+      }
+      .notes-content b {
+        font-weight: 500;
+        color: #7f8ba2;
+      }
+      .empty-state {
+        padding: 68px 25px;
+        text-align: center;
+      }
+      .empty-icon {
+        display: grid;
+        place-items: center;
+        font: 20px var(--mono);
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 17px;
+        background: #f3effb;
+        border: 1px solid #e9e0f8;
+        border-radius: 13px;
+        color: #a48bc9;
+      }
+      .empty-state h3 {
+        font-size: 15px;
+        font-weight: 500;
+        color: #79849b;
+      }
+      .empty-state p {
+        font-size: 12px;
+        color: #a4aebf;
+        max-width: 420px;
+        margin: 8px auto 0;
+        line-height: 1.8;
+      }
+      .source-code {
+        margin: 20px auto 0;
+        text-align: left;
+        max-width: 700px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        color: #99a4b6;
+        font-size: 11px;
+      }
+      .source-code summary {
+        cursor: pointer;
+        padding: 10px 13px;
+      }
+      .source-code pre {
+        font-size: 11px;
+        padding: 15px;
+        border-top: 1px solid var(--line);
+        background: #fafbfe;
+        color: #7c889f;
+      }
+      .no-results {
+        padding: 30px 12px;
+        text-align: center;
+        color: #a0aabd;
+        font-size: 11px;
+      }
+      .graph-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 13px 20px;
+        font-size: 10px;
+        color: #99a5b8;
+      }
+      .graph-toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .graph-toolbar input {
+        accent-color: var(--purple);
+      }
+      .graph-controls {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .graph-controls button {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 4px 9px;
+        font-size: 11px;
+      }
+      .graph-controls output {
+        width: 42px;
+        text-align: center;
+        font-size: 10px;
+        color: #9aa5b7;
+      }
+      .graph-canvas {
+        height: 65vh;
+        min-height: 420px;
+        overflow: auto;
+        background: #f8fafc;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      .graph-canvas > svg {
+        display: block;
+        max-width: none;
+        margin: 0;
+      }
+      .graph-canvas .node,
+      .graph-canvas .edge {
+        transition: opacity 0.15s;
+      }
+      .graph-canvas .dimmed {
+        opacity: 0.08;
+      }
+      .graph-caption {
+        padding: 12px 20px;
+        color: #a4adbc;
+        font-size: 10px;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        font-size: 10px;
+        color: #a4aebf;
+        margin-top: 18px;
+        padding: 0 3px;
+      }
+      .footer span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .footer svg {
+        width: 12px;
+        height: 12px;
+      }
+      .footer a {
+        color: #a18dbd;
+      }
+      .footer a:hover {
+        color: #7554bd;
+      }
+      .empty-workspace {
+        padding: 100px 30px;
+        text-align: center;
+        color: #a1abbd;
+      }
+      .subtitle,
+      .search input,
+      .nav-title,
+      .dependency,
+      .paths-caption,
+      .source-expression,
+      .trace-name code {
+        font-size: 12px;
+      }
+      .metric span,
+      .effect-path,
+      .source-kind,
+      .source-location,
+      .trace-name small,
+      .section-copy,
+      .step-heading,
+      .step-proof,
+      .notes,
+      .footer {
+        font-size: 11px;
+      }
+      .paths-caption,
+      .section-copy,
+      .source-location,
+      .source-kind,
+      .trace-name small,
+      .effect-path,
+      .subtitle {
+        color: #7b879b;
+      }
+      .step code {
+        font-size: 12px;
+      }
+      .nav-deps,
+      .source-tab,
+      .source-all {
+        font-size: 11px;
+      }
+      .metric strong {
+        font-size: 24px;
+      }
+      .origins,
+      .source-list,
+      .source-card {
+        min-width: 0;
+      }
+      .source-card {
+        overflow: hidden;
+      }
+      @media (min-width: 1600px) {
+        .workspace {
+          padding-left: 55px;
+          padding-right: 55px;
+        }
+        .trace-layout {
+          grid-template-columns: 290px minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 1100px) {
+        .app {
+          grid-template-columns: 218px minmax(0, 1fr);
+        }
+        .workspace {
+          padding: 25px 22px;
+        }
+        .trace-layout {
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+        .metric {
+          padding: 13px 12px;
+          gap: 8px;
+        }
+        .metric-icon {
+          width: 27px;
+          height: 27px;
+        }
+        .view-hint {
+          display: none;
+        }
+        .paths {
+          padding: 20px 15px;
+        }
+      }
+      @media (max-width: 800px) {
+        .app {
+          display: block;
+        }
+        .sidebar {
+          position: relative;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .brand {
+          padding: 18px 22px;
+        }
+        .sidebar-heading,
+        .sidebar-bottom {
+          display: none;
+        }
+        .search {
+          margin: 0 20px 13px;
+        }
+        .effect-list {
+          display: flex;
+          max-height: 175px;
+          gap: 15px;
+          padding: 0 18px 12px;
+        }
+        .file-group {
+          min-width: 190px;
+          margin: 0;
+        }
+        .nav-effect {
+          padding: 7px 10px;
+        }
+        .workspace {
+          padding: 22px 16px;
+        }
+        .topline {
+          margin-bottom: 15px;
+        }
+        .heading {
+          margin-bottom: 20px;
+        }
+        h1 {
+          font-size: 24px;
+        }
+        .metrics {
+          gap: 8px;
+        }
+        .metric {
+          padding: 12px 9px;
+        }
+        .metric-icon {
+          display: none;
+        }
+        .metric strong {
+          font-size: 19px;
+        }
+        .metric span {
+          font-size: 9px;
+        }
+        .effect-header {
+          padding: 20px;
+        }
+        .dependency-bar {
+          padding: 13px 20px;
+          align-items: flex-start;
+        }
+        .trace-layout {
+          grid-template-columns: 1fr;
+        }
+        .origins {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .source-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .source-tabs {
+          max-width: 300px;
+        }
+        .source-all {
+          max-width: 300px;
+        }
+        .paths {
+          padding: 22px 18px;
+        }
+        .step-file {
+          font-size: 8px;
+        }
+        .footer {
+          align-items: flex-start;
+          font-size: 9px;
+        }
+        .heading .subtitle {
+          max-width: 250px;
+        }
+        .top-status {
+          font-size: 10px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Effect navigation">
+        <div class="brand">
+          <span class="brand-mark" id="brand-icon"></span
+          ><span
+            >effect<span style="font-weight: 400; color: #8f9aaf">graph</span
+            ><small> / </small></span
+          >
+        </div>
+        <div class="sidebar-heading">
+          PROJECT EFFECTS <span class="counter" id="effect-total"></span>
+        </div>
+        <div class="search">
+          <span id="search-icon"></span
+          ><label class="sr-only" for="search"
+            >Search Effects by file or dependency</label
+          ><input
+            id="search"
+            type="search"
+            placeholder="Find an effect…"
+            autocomplete="off"
+          />
+        </div>
+        <nav
+          class="effect-list"
+          id="effect-list"
+          aria-label="Effects grouped by source file"
+        ></nav>
+        <div class="sidebar-bottom">
+          <span class="status-dot"></span
+          ><span id="analysis-mode">Analysis complete</span>
+        </div>
+      </aside>
+      <main class="workspace">
+        <div class="topline">
+          <div class="breadcrumb">
+            <span>WORKSPACE</span><span>/</span
+            ><span class="current">EFFECT EXPLORER</span>
+          </div>
+          <div class="top-status">
+            <span class="status-dot"></span
+            ><span id="top-status">Analysis complete</span>
+          </div>
+        </div>
+        <div class="heading">
+          <div>
+            <h1>Effect provenance</h1>
+            <p class="subtitle">Follow the values behind every dependency.</p>
+          </div>
+          <details class="exports">
+            <summary>
+              <span id="download-icon"></span>Export report
+              <span style="color: #abb3c2">⌄</span>
+            </summary>
+            <div class="export-menu">
+              <a href="{{BASENAME}}.json" download>Structured data · JSON</a
+              ><a href="{{BASENAME}}.svg" download>Full graph · SVG</a
+              ><a href="{{BASENAME}}.png" download>Full graph · PNG</a>
+            </div>
+          </details>
+        </div>
+        <section
+          class="metrics"
+          aria-label="Analysis totals"
+          id="metrics"
+        ></section>
+        <div class="partial-note" id="partial-note" hidden>
+          Some paths reached the configured analysis limits. The displayed
+          origins may be incomplete.
+        </div>
+        <section
+          class="effect-panel"
+          id="effect-panel"
+          aria-label="Selected Effect"
+        >
+          <header class="effect-header">
+            <div>
+              <div class="effect-kicker" id="effect-kicker"></div>
+              <div class="effect-title">
+                <h2 id="effect-title"></h2>
+                <span class="line-badge" id="effect-line"></span>
+              </div>
+              <p class="effect-path" id="effect-path"></p>
+            </div>
+            <span class="hook-tag">useEffect</span>
+          </header>
+          <div class="dependency-bar">
+            <span>DEPENDENCIES</span>
+            <div class="dependency-buttons" id="dependencies"></div>
+          </div>
+          <div class="view-tabs" role="tablist" aria-label="Report view">
+            <button
+              class="view-tab active"
+              id="trace-tab"
+              role="tab"
+              aria-selected="true"
+              aria-controls="trace-view"
+            ></button
+            ><button
+              class="view-tab"
+              id="graph-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="graph-view"
+            ></button
+            ><span class="view-hint">Source → dependency → Effect</span>
+          </div>
+          <div id="trace-view" role="tabpanel" aria-labelledby="trace-tab">
+            <div class="trace-layout" id="trace-layout">
+              <section class="origins" aria-label="Dependency sources">
+                <div class="section-heading">
+                  <h3>Value sources</h3>
+                  <span class="count" id="source-count"></span>
+                </div>
+                <p class="section-copy">Where this dependency can come from.</p>
+                <div
+                  class="source-tabs"
+                  role="group"
+                  aria-label="Source category"
+                >
+                  <button
+                    class="source-tab active"
+                    id="origins-tab"
+                    aria-pressed="true"
+                  ></button
+                  ><button
+                    class="source-tab"
+                    id="interfaces-tab"
+                    aria-pressed="false"
+                  ></button>
+                </div>
+                <button class="source-all active" id="all-sources">
+                  All sources <span>↗</span>
+                </button>
+                <div class="source-list" id="source-list"></div>
+              </section>
+              <section class="paths" aria-label="Provenance traces">
+                <div class="paths-heading">
+                  <div>
+                    <h3>Provenance paths</h3>
+                    <span class="counter" id="path-count"></span>
+                  </div>
+                  <span style="color: #bbc2d0; font-size: 9px"
+                    >POSSIBLE VALUE FLOW</span
+                  >
+                </div>
+                <p class="paths-caption" id="paths-caption"></p>
+                <div class="trace-list" id="trace-list"></div>
+                <button class="load-more" id="load-more" hidden></button>
+              </section>
+            </div>
+            <div class="empty-state" id="empty-effect" hidden></div>
+          </div>
+          <div
+            id="graph-view"
+            role="tabpanel"
+            aria-labelledby="graph-tab"
+            hidden
+          >
+            <div class="graph-toolbar">
+              <label
+                ><input type="checkbox" id="highlight" checked />Highlight
+                selected dependency</label
+              >
+              <div class="graph-controls" aria-label="Graph zoom">
+                <button id="zoom-out" aria-label="Zoom out">−</button
+                ><output id="zoom">100%</output
+                ><button id="zoom-in" aria-label="Zoom in">+</button
+                ><button id="fit">Fit all</button
+                ><button id="actual">100%</button>
+              </div>
+            </div>
+            <div
+              class="graph-canvas"
+              id="graph-canvas"
+              tabindex="0"
+              aria-label="Whole-program graph. Scroll to explore."
+            >
+              {{GRAPH}}
+            </div>
+            <p class="graph-caption">
+              Whole-program overview. Use provenance paths to follow a specific
+              call context. Dashed and dotted links are annotations.
+            </p>
+          </div>
+          <details class="notes" id="notes">
+            <summary id="notes-title"></summary>
+            <div class="notes-content" id="notes-content"></div>
+          </details>
+        </section>
+        <div class="empty-workspace" id="empty-workspace" hidden>
+          No matching Effects. Try another file or dependency.
+        </div>
+        <footer class="footer">
+          <span id="footer-mode"></span
+          ><a href="{{BASENAME}}.json" download>View analysis data ↗</a>
+        </footer>
+      </main>
+    </div>
+    <script id="report-data" type="application/json">
+      {{DATA}}
+    </script>
+    <script>
+      'use strict'
+      const data = JSON.parse(
+        document.getElementById('report-data').textContent,
+      )
+      const $ = (id) => document.getElementById(id)
+      const entities = new Map(
+        data.entities.map((entity) => [entity.id, entity]),
+      )
+      const edges = new Map(data.edges.map((edge) => [edge.id, edge]))
+      const escape = (value) =>
+        String(value ?? '').replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+            })[char],
+        )
+      const compact = (value, length = 60) => {
+        const text = String(value ?? '')
+          .replace(/\s+/g, ' ')
+          .trim()
+        return text.length > length ? text.slice(0, length - 1) + '…' : text
+      }
+      const basename = (value) => value.split('/').at(-1)
+      const at = (entity) =>
+        entity
+          ? basename(entity.location.file) + ':' + entity.location.startLine
+          : 'Unknown location'
+      const iconPaths = {
+        layers:
+          '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+        search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+        file: '<path d="M14 2H5v20h14V7l-5-5Z"/><path d="M14 2v6h5M8 12h8M8 16h6"/>',
+        arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
+        chevron: '<path d="m9 5 7 7-7 7"/>',
+        download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+        branch:
+          '<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10m0-4h6a6 6 0 0 0 6-3"/>',
+        route:
+          '<circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 5h8a4 4 0 0 1 0 8H9a4 4 0 0 0 0 8h8"/>',
+        grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+        check: '<path d="m5 12 4 4L19 6"/>',
+        info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/>',
+      }
+      const icon = (name, extra = '') =>
+        '<svg class="icon ' +
+        extra +
+        '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        (iconPaths[name] || iconPaths.route) +
+        '</svg>'
+      const names = {
+        'react-state': 'React state',
+        literal: 'Literal value',
+        'unknown-call': 'External call',
+        'function-creation': 'Function identity',
+        'object-creation': 'Object identity',
+        'array-creation': 'Array identity',
+        parameter: 'Parameter',
+        'property-read': 'Property read',
+        value: 'Value',
+      }
+      const rules = {
+        'value-flow': 'Value passed through',
+        transformation: 'Value transformed',
+        'property-read': 'Property read',
+        'call-argument': 'Argument → parameter',
+        'call-return': 'Returned from function',
+        'callback-identity': 'Callback identity',
+        'state-initial': 'Initial state value',
+        'state-update': 'Possible state update',
+        'state-update-functional': 'Functional state update',
+        'effect-dependency': 'Declared dependency',
+      }
+      const reasons = {
+        'unknown-call': 'External calls stop at the available model boundary.',
+        'react-state': 'React state is shown as a reactive source.',
+        literal: 'Literal values are allocation-time origins.',
+        'function-identity':
+          'Function identities are separate from captured values.',
+        'object-identity': 'Object allocation is shown as an identity source.',
+        'array-identity': 'Array allocation is shown as an identity source.',
+        'parameter-interface': 'Parameter interfaces may have earlier sources.',
+        'property-observation':
+          'Property observations may have earlier sources.',
+        'no-modeled-origin':
+          'No earlier origin was found by the available model.',
+      }
+      const depsFor = (effect) =>
+        data.dependencies
+          .filter((dep) => dep.effectId === effect.id)
+          .sort((a, b) => a.index - b.index)
+      const pathsFor = (dependency) =>
+        dependency
+          ? data.paths.filter((path) => path.dependencyId === dependency.id)
+          : []
+      const color = (entity) =>
+        entity?.kind === 'react-state'
+          ? 'green'
+          : entity?.kind === 'unknown-call'
+            ? 'amber'
+            : ''
+      const hashState = new URLSearchParams(location.hash.slice(1))
+      let selectedEffect =
+        data.effects.find((effect) => effect.id === hashState.get('effect')) ||
+        data.effects[0]
+      let selectedIndex = Number(hashState.get('dependency')) || 0
+      let sourceRole = 'origin'
+      let sourceId = null
+      let pathLimit = 6
+      let view = 'trace'
+      let graphScale = 1
+
+      $('brand-icon').innerHTML = icon('layers')
+      $('search-icon').innerHTML = icon('search')
+      $('download-icon').innerHTML = icon('download')
+      $('trace-tab').innerHTML = icon('route') + 'Dependency traces'
+      $('graph-tab').innerHTML = icon('grid') + 'Graph overview'
+      $('effect-total').textContent = data.effects.length
+      const modeName =
+        data.mode === 'extended-state'
+          ? 'State history'
+          : data.mode === 'extended'
+            ? 'State boundaries'
+            : data.mode === 'standard-taint'
+              ? 'Standard taint flow'
+              : 'Standard value flow'
+      $('analysis-mode').textContent = modeName
+      $('top-status').textContent = data.truncated
+        ? 'Partial analysis'
+        : 'Analysis complete'
+      $('partial-note').hidden = !data.truncated
+      $('footer-mode').innerHTML =
+        icon('check') +
+        escape(modeName) +
+        ' <span style="color:#d0d5df">·</span> Sources and paths from your analysis'
+      $('metrics').innerHTML = [
+        ['layers', data.effects.length, 'React Effects'],
+        ['branch', data.dependencies.length, 'Dependencies'],
+        ['route', data.paths.length, 'Provenance paths'],
+        [
+          'file',
+          new Set(data.entities.map((entity) => entity.location.file)).size,
+          'Source files',
+        ],
+      ]
+        .map(
+          ([name, count, label]) =>
+            '<div class="metric"><div class="metric-icon">' +
+            icon(name) +
+            '</div><div><strong>' +
+            count +
+            '</strong><span>' +
+            label +
+            '</span></div></div>',
+        )
+        .join('')
+
+      function renderNavigation() {
+        const search = $('search').value.trim().toLowerCase()
+        const visible = data.effects.filter((effect) =>
+          (
+            effect.location.file +
+            ' ' +
+            effect.mode +
+            ' ' +
+            depsFor(effect)
+              .map((dep) => dep.expression)
+              .join(' ')
+          )
+            .toLowerCase()
+            .includes(search),
+        )
+        const groups = new Map()
+        for (const effect of visible) {
+          const group = groups.get(effect.location.file) || []
+          group.push(effect)
+          groups.set(effect.location.file, group)
+        }
+        $('effect-list').innerHTML =
+          [...groups]
+            .map(
+              ([file, effects]) =>
+                '<div class="file-group"><div class="file-name" title="' +
+                escape(file) +
+                '">' +
+                icon('file') +
+                '<span>' +
+                escape(basename(file)) +
+                '</span></div>' +
+                effects
+                  .map((effect) => {
+                    const deps = depsFor(effect)
+                    return (
+                      '<button class="nav-effect ' +
+                      (effect === selectedEffect ? 'active' : '') +
+                      '" data-effect="' +
+                      data.effects.indexOf(effect) +
+                      '" ' +
+                      (effect === selectedEffect ? 'aria-current="true"' : '') +
+                      '><span class="nav-title">useEffect <span class="nav-line">L' +
+                      effect.location.startLine +
+                      '</span></span><span class="nav-deps">' +
+                      escape(
+                        deps.length
+                          ? '[' +
+                              deps
+                                .map((dep) => compact(dep.expression, 30))
+                                .join(', ') +
+                              ']'
+                          : effect.mode === 'empty'
+                            ? '[] · empty dependencies'
+                            : effect.mode === 'absent'
+                              ? 'No dependency array'
+                              : 'Unsupported dependency array',
+                      ) +
+                      '</span></button>'
+                    )
+                  })
+                  .join('') +
+                '</div>',
+            )
+            .join('') || '<div class="no-results">No matching Effects</div>'
+        return visible
+      }
+      function currentDependency() {
+        return selectedEffect
+          ? depsFor(selectedEffect).find(
+              (dep) => dep.index === selectedIndex,
+            ) || depsFor(selectedEffect)[0]
+          : null
+      }
+      function updateHash() {
+        if (!selectedEffect) return
+        const state = new URLSearchParams({
+          effect: selectedEffect.id,
+          dependency: String(currentDependency()?.index || 0),
+        })
+        history.replaceState(null, '', '#' + state.toString())
+      }
+      function selectEffect(effect, index = 0) {
+        selectedEffect = effect
+        selectedIndex = index
+        sourceId = null
+        sourceRole = 'origin'
+        pathLimit = 6
+        renderNavigation()
+        renderEffect()
+        updateHash()
+      }
+      function renderEffect() {
+        $('effect-panel').hidden = !selectedEffect
+        $('empty-workspace').hidden = !!selectedEffect
+        if (!selectedEffect) return
+        const effect = selectedEffect
+        const file = effect.location.file
+        $('effect-kicker').innerHTML =
+          icon('file') +
+          escape(
+            file.includes('/')
+              ? file.slice(0, file.lastIndexOf('/'))
+              : 'Project root',
+          )
+        $('effect-title').textContent = basename(file)
+        $('effect-line').textContent = 'line ' + effect.location.startLine
+        $('effect-path').textContent = file
+        const deps = depsFor(effect)
+        const dep = currentDependency()
+        if (dep) selectedIndex = dep.index
+        $('dependencies').innerHTML =
+          deps
+            .map(
+              (item) =>
+                '<button class="dependency ' +
+                (item === dep ? 'selected' : '') +
+                '" data-dependency="' +
+                item.index +
+                '" aria-pressed="' +
+                (item === dep) +
+                '"><small>' +
+                item.index +
+                '</small>' +
+                escape(compact(item.expression, 65)) +
+                '</button>',
+            )
+            .join('') ||
+          '<span style="color:#a9a0b8;font:11px var(--mono)">' +
+            (effect.mode === 'empty'
+              ? '[]'
+              : effect.mode === 'absent'
+                ? 'Not supplied'
+                : 'Unsupported expression') +
+            '</span>'
+        $('trace-layout').hidden = !dep
+        $('empty-effect').hidden = !!dep
+        if (dep) renderSources()
+        else {
+          const description =
+            effect.mode === 'empty'
+              ? [
+                  'Empty dependency array',
+                  'This Effect declares no dependencies. It is retained in the report, with no dependency origins to trace.',
+                ]
+              : effect.mode === 'absent'
+                ? [
+                    'No dependency array',
+                    'This Effect has no explicit dependency entries to analyze.',
+                  ]
+                : [
+                    'Unsupported dependency array',
+                    'The dependency argument could not be interpreted as a fixed list. No element positions have been invented.',
+                  ]
+          $('empty-effect').innerHTML =
+            '<div class="empty-icon">' +
+            (effect.mode === 'empty' ? '[ ]' : '···') +
+            '</div><h3>' +
+            description[0] +
+            '</h3><p>' +
+            description[1] +
+            '</p><details class="source-code"><summary>View Effect source</summary><pre>' +
+            escape(entities.get(effect.id)?.expression || '') +
+            '</pre></details>'
+        }
+        renderNotes()
+        if (view === 'graph') highlightGraph()
+      }
+      function renderSources() {
+        const dep = currentDependency()
+        const paths = pathsFor(dep)
+        const origins = new Set(
+          paths
+            .filter((path) => path.sourceRole === 'origin')
+            .map((path) => path.source),
+        )
+        const interfaces = new Set(
+          paths
+            .filter((path) => path.sourceRole !== 'origin')
+            .map((path) => path.source),
+        )
+        if (sourceRole === 'origin' && !origins.size && interfaces.size)
+          sourceRole = 'observation'
+        $('origins-tab').textContent = 'Origins · ' + origins.size
+        $('interfaces-tab').textContent = 'Interfaces · ' + interfaces.size
+        for (const [id, role] of [
+          ['origins-tab', 'origin'],
+          ['interfaces-tab', 'observation'],
+        ]) {
+          $(id).classList.toggle('active', sourceRole === role)
+          $(id).setAttribute('aria-pressed', String(sourceRole === role))
+        }
+        const matching = paths.filter(
+          (path) =>
+            (sourceRole === 'origin') === (path.sourceRole === 'origin'),
+        )
+        const sources = new Map()
+        for (const path of matching) {
+          const entry = sources.get(path.source) || {
+            entity: entities.get(path.source),
+            paths: [],
+          }
+          entry.paths.push(path)
+          sources.set(path.source, entry)
+        }
+        if (sourceId && !sources.has(sourceId)) sourceId = null
+        const list = [...sources.values()].sort((a, b) => {
+          const priority = (entity) =>
+            entity.kind === 'react-state'
+              ? 0
+              : entity.kind === 'literal'
+                ? 1
+                : 2
+          return (
+            priority(a.entity) - priority(b.entity) ||
+            at(a.entity).localeCompare(at(b.entity))
+          )
+        })
+        $('source-count').textContent = list.length + ' sources'
+        $('source-list').innerHTML =
+          list
+            .map(
+              ({ entity, paths }) =>
+                '<button class="source-card ' +
+                (sourceId === entity.id ? 'active' : '') +
+                '" data-source="' +
+                data.entities.indexOf(entity) +
+                '" aria-pressed="' +
+                (sourceId === entity.id) +
+                '" title="' +
+                escape(entity.expression) +
+                '"><span class="source-top"><i class="kind-dot ' +
+                color(entity) +
+                '"></i><span class="source-kind">' +
+                escape(names[entity.kind] || entity.kind) +
+                '</span><span class="source-count">' +
+                paths.length +
+                ' ' +
+                (paths.length === 1 ? 'path' : 'paths') +
+                '</span></span><span class="source-expression">' +
+                escape(compact(entity.expression, 50)) +
+                '</span><span class="source-location">' +
+                icon('file') +
+                escape(at(entity)) +
+                '</span></button>',
+            )
+            .join('') ||
+          '<div class="no-results">No sources in this category.</div>'
+        $('all-sources').classList.toggle('active', !sourceId)
+        $('all-sources').innerHTML =
+          (sourceId
+            ? 'Clear source filter'
+            : 'All ' + (sourceRole === 'origin' ? 'origins' : 'interfaces')) +
+          icon('arrow')
+        renderPaths()
+      }
+      function renderPaths() {
+        const dep = currentDependency()
+        const paths = pathsFor(dep)
+          .filter(
+            (path) =>
+              (sourceRole === 'origin') === (path.sourceRole === 'origin') &&
+              (!sourceId || path.source === sourceId),
+          )
+          .sort(
+            (a, b) =>
+              (entities.get(a.source)?.kind === 'react-state' ? 0 : 1) -
+                (entities.get(b.source)?.kind === 'react-state' ? 0 : 1) ||
+              a.edges.length - b.edges.length ||
+              a.id.localeCompare(b.id),
+          )
+        $('path-count').textContent = paths.length
+        $('paths-caption').textContent = sourceId
+          ? 'Showing paths from ' +
+            compact(entities.get(sourceId)?.expression, 50) +
+            ' to ' +
+            compact(dep.expression, 40) +
+            '.'
+          : 'Expand a path to inspect how a source reaches ' +
+            compact(dep.expression, 45) +
+            '.'
+        $('trace-list').innerHTML =
+          paths
+            .slice(0, pathLimit)
+            .map((path, index) => {
+              const source = entities.get(path.source)
+              return (
+                '<details class="trace-card" ' +
+                (sourceId && index === 0 ? 'open' : '') +
+                '><summary><span class="trace-icon">' +
+                icon(source.kind === 'react-state' ? 'layers' : 'route') +
+                '</span><span class="trace-name"><code>' +
+                escape(compact(source.expression, 75)) +
+                '</code><small>' +
+                escape(at(source)) +
+                ' <span style="padding:0 4px">→</span> ' +
+                escape(compact(dep.expression, 32)) +
+                '</small></span><span class="step-count">' +
+                path.edges.length +
+                ' steps</span>' +
+                icon('chevron', 'chevron') +
+                '</summary><div class="trace-steps">' +
+                path.nodes
+                  .map((id, step) => {
+                    const entity = entities.get(id)
+                    const edge = edges.get(path.edges[step - 1])
+                    const label =
+                      step === 0
+                        ? names[entity.kind] || 'Source value'
+                        : rules[edge?.type] ||
+                          edge?.type?.replaceAll('-', ' ') ||
+                          'Value flow'
+                    return (
+                      '<div class="step"><span class="step-number">' +
+                      (step + 1) +
+                      '</span><div class="step-heading"><span>' +
+                      escape(label) +
+                      '</span><span class="step-file" title="' +
+                      escape(entity.location.file) +
+                      '">' +
+                      escape(at(entity)) +
+                      '</span></div><code>' +
+                      escape(entity.expression || entity.label) +
+                      '</code>' +
+                      (edge
+                        ? '<details class="step-proof"><summary>Transition evidence</summary><div>' +
+                          escape(edge.rule) +
+                          ' · ' +
+                          escape(edge.status) +
+                          '<br>' +
+                          escape(edge.evidence.file) +
+                          ':' +
+                          edge.evidence.startLine +
+                          ':' +
+                          edge.evidence.startColumn +
+                          (edge.callContext
+                            ? '<br>Matched call ' +
+                              escape(at(entities.get(edge.callContext.site)))
+                            : '') +
+                          '</div></details>'
+                        : '') +
+                      '</div>'
+                    )
+                  })
+                  .join('') +
+                '</div></details>'
+              )
+            })
+            .join('') ||
+          '<div class="no-results">No modeled paths for this selection. Boundary notes explain where analysis stopped.</div>'
+        $('load-more').hidden = paths.length <= pathLimit
+        $('load-more').textContent =
+          'Show ' + (paths.length - pathLimit) + ' more paths'
+        if (view === 'graph') highlightGraph()
+      }
+      function renderNotes() {
+        const dep = currentDependency()
+        const boundaries = data.boundaries.filter(
+          (boundary) => boundary.dependencyId === dep?.id,
+        )
+        const diagnostics = data.diagnostics.filter(
+          (item) =>
+            item.dependencyId === dep?.id ||
+            item.dependencyId === selectedEffect.id,
+        )
+        const filtered = (data.filteredPaths || []).filter(
+          (item) => item.dependencyId === dep?.id,
+        )
+        const reasonList = [
+          ...new Set(boundaries.map((boundary) => boundary.reason)),
+        ]
+        $('notes-title').innerHTML =
+          icon('info') +
+          ' Boundaries & analysis notes' +
+          (filtered.length
+            ? ' · ' + filtered.length + ' mismatched paths excluded'
+            : '')
+        $('notes-content').innerHTML =
+          reasonList
+            .map(
+              (reason) =>
+                '<p><b>' +
+                escape(reason.replaceAll('-', ' ')) +
+                '.</b> ' +
+                escape(reasons[reason] || '') +
+                '</p>',
+            )
+            .join('') +
+          diagnostics
+            .map(
+              (item) =>
+                '<p>' +
+                escape(item.reason.replaceAll('-', ' ')) +
+                ' · ' +
+                escape(item.status) +
+                '</p>',
+            )
+            .join('') +
+          (filtered.length
+            ? '<p>' +
+              filtered.length +
+              ' paths were excluded because their function entry and return call sites did not match.</p>'
+            : '') +
+          '<p>Paths describe possible value flow. They do not infer the order of renders, timers, or state updates.</p>'
+      }
+      const svg = $('graph-canvas').querySelector('svg')
+      const graphWidth = svg?.viewBox.baseVal.width || 1
+      function zoom(value) {
+        graphScale = Math.max(0.04, Math.min(3, value))
+        if (svg) {
+          svg.style.width = graphWidth * graphScale + 'px'
+          svg.style.height = 'auto'
+        }
+        $('zoom').value = Math.round(graphScale * 100) + '%'
+      }
+      function highlightGraph() {
+        if (!svg) return
+        const dep = currentDependency()
+        const paths = pathsFor(dep).filter(
+          (path) => !sourceId || path.source === sourceId,
+        )
+        const nodeIds = new Set(paths.flatMap((path) => path.nodes))
+        const edgeIds = new Set(paths.flatMap((path) => path.edges))
+        if (selectedEffect) nodeIds.add(selectedEffect.id)
+        if (dep) nodeIds.add(dep.entityId)
+        for (const edge of data.edges)
+          if (
+            edge.type === 'effect-dependency' &&
+            edge.from === dep?.entityId &&
+            edge.to === selectedEffect?.id
+          )
+            edgeIds.add(edge.id)
+        const enabled = $('highlight').checked
+        for (const node of svg.querySelectorAll('.node'))
+          node.classList.toggle(
+            'dimmed',
+            enabled && !nodeIds.has(node.querySelector('title')?.textContent),
+          )
+        for (const edge of svg.querySelectorAll('.edge'))
+          edge.classList.toggle('dimmed', enabled && !edgeIds.has(edge.id))
+      }
+      function setView(next) {
+        view = next
+        $('trace-view').hidden = next !== 'trace'
+        $('graph-view').hidden = next !== 'graph'
+        for (const name of ['trace', 'graph']) {
+          $(name + '-tab').classList.toggle('active', next === name)
+          $(name + '-tab').setAttribute('aria-selected', String(next === name))
+        }
+        if (next === 'graph') {
+          highlightGraph()
+          zoom(Math.min(1, ($('graph-canvas').clientWidth - 30) / graphWidth))
+        }
+      }
+      $('effect-list').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-effect]')
+        if (button) selectEffect(data.effects[Number(button.dataset.effect)])
+      })
+      $('dependencies').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-dependency]')
+        if (button)
+          selectEffect(selectedEffect, Number(button.dataset.dependency))
+      })
+      $('source-list').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-source]')
+        if (button) {
+          const id = data.entities[Number(button.dataset.source)].id
+          sourceId = sourceId === id ? null : id
+          pathLimit = 6
+          renderSources()
+        }
+      })
+      $('all-sources').addEventListener('click', () => {
+        sourceId = null
+        pathLimit = 6
+        renderSources()
+      })
+      for (const [id, role] of [
+        ['origins-tab', 'origin'],
+        ['interfaces-tab', 'observation'],
+      ])
+        $(id).addEventListener('click', () => {
+          sourceRole = role
+          sourceId = null
+          pathLimit = 6
+          renderSources()
+        })
+      $('load-more').addEventListener('click', () => {
+        pathLimit = Infinity
+        renderPaths()
+      })
+      $('search').addEventListener('input', () => {
+        const visible = renderNavigation()
+        if (!visible.includes(selectedEffect)) selectEffect(visible[0])
+      })
+      $('trace-tab').addEventListener('click', () => setView('trace'))
+      $('graph-tab').addEventListener('click', () => setView('graph'))
+      $('highlight').addEventListener('change', highlightGraph)
+      $('zoom-in').addEventListener('click', () => zoom(graphScale * 1.3))
+      $('zoom-out').addEventListener('click', () => zoom(graphScale / 1.3))
+      $('fit').addEventListener('click', () =>
+        zoom(($('graph-canvas').clientWidth - 30) / graphWidth),
+      )
+      $('actual').addEventListener('click', () => zoom(1))
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape')
+          document.querySelector('.exports').open = false
+      })
+      renderNavigation()
+      renderEffect()
+      updateHash()
+    </script>
+  </body>
+</html>
