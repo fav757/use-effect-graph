@@ -1,5 +1,10 @@
 # use-effect-graph
 
+The extended analyzer exports structured provenance JSON, contextual paths,
+state boundaries/history, and a JSON-based Graphviz viewer. See
+[analysis/README.md](analysis/README.md) for the reproducible workflow and
+comparison with the preserved baseline described below.
+
 This project contains a custom CodeQL graph query for React `useEffect`
 dependencies and callback patterns. The query finds `useEffect` calls with
 array-literal dependency lists, follows the variables referenced by each entry,

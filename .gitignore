@@ -17,3 +17,9 @@ dist
 #CodeQL
 codeql-db/
 codeql-results.sarif
+
+# Reproducible analysis outputs and CodeQL compilation products
+codeql-graph/provenance/
+codeql-graph/provenance-fixtures/
+codeql-queries/**/*.qlx
+codeql-queries/**/.cache/

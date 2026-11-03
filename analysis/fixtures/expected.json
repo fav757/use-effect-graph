@@ -1,0 +1,232 @@
+{
+  "lazy-state.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      { "expression": "left", "include": ["'lazy-left'"], "exclude": ["'lazy-right'"] },
+      { "expression": "right", "include": ["'lazy-right'"], "exclude": ["'lazy-left'"] }
+    ]
+  },
+  "assignments.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "third",
+        "index": 0,
+        "include": [
+          "'assignment-origin'"
+        ]
+      },
+      {
+        "expression": "third",
+        "index": 1,
+        "include": [
+          "'assignment-origin'"
+        ]
+      }
+    ]
+  },
+  "overwrites.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "unconditional",
+        "include": [
+          "'current-origin'"
+        ],
+        "exclude": [
+          "'discarded-origin'"
+        ]
+      },
+      {
+        "expression": "conditional",
+        "include": [
+          "'before-branch'",
+          "'inside-branch'"
+        ]
+      }
+    ]
+  },
+  "properties.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "user.id",
+        "include": [
+          "'id-origin'"
+        ],
+        "exclude": [
+          "'name-origin'"
+        ]
+      },
+      {
+        "expression": "id",
+        "include": [
+          "'id-origin'"
+        ],
+        "exclude": [
+          "'name-origin'"
+        ]
+      }
+    ]
+  },
+  "calls.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "left",
+        "include": [
+          "'left-origin'"
+        ],
+        "exclude": [
+          "'right-origin'",
+          "'unused-left'",
+          "'unused-right'"
+        ]
+      },
+      {
+        "expression": "right",
+        "include": [
+          "'right-origin'"
+        ],
+        "exclude": [
+          "'left-origin'",
+          "'unused-left'",
+          "'unused-right'"
+        ]
+      }
+    ]
+  },
+  "custom-hooks.tsx": {
+    "effectCount": 2,
+    "dependencies": [
+      {
+        "expression": "left",
+        "include": [
+          "'hook-left'"
+        ],
+        "exclude": [
+          "'hook-right'"
+        ]
+      },
+      {
+        "expression": "right",
+        "include": [
+          "'hook-right'"
+        ],
+        "exclude": [
+          "'hook-left'"
+        ]
+      }
+    ]
+  },
+  "jsx.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "value",
+        "include": [
+          "\"jsx-origin\""
+        ]
+      }
+    ]
+  },
+  "state.tsx": {
+    "effectCount": 3,
+    "modes": {
+      "empty": 2,
+      "literal": 1
+    },
+    "dependencies": [
+      {
+        "expression": "value",
+        "include": [
+          "'state-initial'",
+          "'state-next'",
+          "'-suffix'"
+        ]
+      }
+    ]
+  },
+  "memo.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "memo",
+        "include": [
+          "'capture-origin'",
+          "'-memo'"
+        ]
+      },
+      {
+        "expression": "callback",
+        "exclude": [
+          "'capture-origin'"
+        ]
+      }
+    ]
+  },
+  "imports.tsx": {
+    "effectCount": 3,
+    "dependencies": [
+      {
+        "expression": "'alias-origin'",
+        "include": [
+          "'alias-origin'"
+        ]
+      },
+      {
+        "expression": "'namespace-origin'",
+        "include": [
+          "'namespace-origin'"
+        ]
+      },
+      {
+        "expression": "'default-origin'",
+        "include": [
+          "'default-origin'"
+        ]
+      }
+    ]
+  },
+  "arrays.tsx": {
+    "effectCount": 5,
+    "modes": {
+      "empty": 1,
+      "absent": 1,
+      "unsupported": 3
+    },
+    "dependencies": []
+  },
+  "boundaries.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "unknown",
+        "exclude": [
+          "'must-not-propagate'"
+        ]
+      },
+      {
+        "expression": "cyclic",
+        "include": [
+          "'cycle-seed'",
+          "'-cycle'"
+        ]
+      }
+    ]
+  },
+  "cross-file.tsx": {
+    "effectCount": 1,
+    "dependencies": [
+      {
+        "expression": "value",
+        "include": [
+          "'import-origin'"
+        ],
+        "exclude": [
+          "'import-unused'"
+        ]
+      }
+    ]
+  }
+}
