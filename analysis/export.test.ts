@@ -3,6 +3,306 @@ import assert from 'node:assert/strict'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { exportResult, toDot } from './export.ts'
+test('path identity preserves transition kinds and evidence', () => {
+  for (const [kind, provenance] of [
+    ['state-update', ''],
+    ['state-initial', 'another basis'],
+  ]) {
+    const { inventory, flow } = data()
+    flow.pathEdges = table([
+      [{ id: 1 }, { id: 4 }, 'state-initial', ''],
+      [{ id: 1 }, { id: 4 }, kind, provenance],
+    ])
+    const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
+    assert.equal(
+      result.paths.filter((p) => p.dependencyId.endsWith(':0')).length,
+      2,
+    )
+    assert.equal(new Set(result.paths.map((p) => p.id)).size, 4)
+  }
+})
+
+test('path identity preserves meaningful contexts and merges equivalent aliases', () => {
+  for (const distinct of [true, false]) {
+    const { inventory, flow } = data()
+    flow.pathNodes.tuples.push([
+      { id: 11 },
+      'a',
+      distinct ? 'another call context' : 'source',
+    ])
+    flow.pathEdges = table([
+      [{ id: 1 }, { id: 4 }, 'value-flow', ''],
+      [{ id: 11 }, { id: 4 }, 'value-flow', ''],
+    ])
+    flow['#select'].tuples.push(['effect', 0, { id: 11 }, { id: 4 }])
+    const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
+    assert.equal(
+      result.paths.filter((p) => p.dependencyId.endsWith(':0')).length,
+      distinct ? 2 : 1,
+    )
+  }
+})
+
+test('unique path count below or exactly at the limit is complete', () => {
+  const { inventory, flow } = data()
+  for (const maxPaths of [1, 2]) {
+    const result = exportResult(inventory, flow, sourceRoot, 'extended-state', {
+      maxPaths,
+    })
+    assert.equal(result.truncated, false)
+    assert(!result.diagnostics.some((d) => d.reason === 'path-limit'))
+    assert.equal(result.paths.length, 2)
+    assert(
+      result.searches.every(
+        (search) =>
+          search.complete &&
+          !search.additionalPathFound &&
+          search.pathLimitReached === (maxPaths === 1),
+      ),
+    )
+  }
+})
+
+test('equivalent table duplicates do not consume the unique path budget', () => {
+  const { inventory, flow } = data()
+  flow.pathEdges.tuples.push(...structuredClone(flow.pathEdges.tuples))
+  flow['#select'].tuples.push(...structuredClone(flow['#select'].tuples))
+  const result = exportResult(inventory, flow, sourceRoot, 'extended-state', {
+    maxPaths: 1,
+  })
+  assert.equal(result.paths.length, 2)
+  assert.equal(result.truncated, false)
+})
+
+test('context-rejected candidates after a full path quota do not imply truncation', () => {
+  const { inventory, flow } = data()
+  flow.pathEdges.tuples.push(
+    [{ id: 1 }, { id: 3 }, 'call-argument', ''],
+    [{ id: 3 }, { id: 4 }, 'call-return', ''],
+  )
+  const contexts = {
+    ...inventory,
+    callArguments: table([
+      ['a', 'b', 'dep', 'f'],
+      ['a', 'c', 'b', 'f'],
+    ]),
+    callReturns: table([
+      ['b', 'dep', 'f'],
+      ['c', 'dep', 'f'],
+    ]),
+  }
+  const result = exportResult(contexts, flow, sourceRoot, 'extended-state', {
+    maxPaths: 1,
+  })
+  assert.equal(result.paths.length, 2)
+  assert.equal(result.filteredPaths.length, 2)
+  assert.equal(result.truncated, false)
+})
+
+test('unfinished lookahead reports the actual step, depth or context budget', () => {
+  for (const budget of ['maxSteps', 'maxDepth', 'maxContexts'] as const) {
+    const { inventory, flow } = data()
+    flow.pathEdges.tuples.push(
+      [{ id: 1 }, { id: 3 }, 'value-flow', ''],
+      [{ id: 3 }, { id: 2 }, 'value-flow', ''],
+    )
+    const contexts = {
+      ...inventory,
+      callArguments: table([
+        ['a', 'b', 'dep', 'f'],
+        ['a', 'c', 'c', 'g'],
+      ]),
+      callReturns: table([]),
+    }
+    const limits = {
+      maxPaths: 1,
+      [budget]: budget === 'maxSteps' ? 3 : budget === 'maxDepth' ? 2 : 1,
+    }
+    const result = exportResult(
+      contexts,
+      flow,
+      sourceRoot,
+      'extended-state',
+      limits,
+    )
+    assert(
+      result.diagnostics.some(
+        (d) =>
+          d.reason ===
+          {
+            maxSteps: 'step-limit',
+            maxDepth: 'depth-limit',
+            maxContexts: 'context-limit',
+          }[budget],
+      ),
+    )
+    assert(!result.diagnostics.some((d) => d.reason === 'path-limit'))
+    assert.equal(result.truncated, true)
+  }
+})
+
+test('typed paths are deterministic under row shuffles and BQRS renumbering', () => {
+  const { inventory, flow } = data()
+  flow.pathEdges = table([
+    [{ id: 1 }, { id: 4 }, 'state-initial', 'basis A'],
+    [{ id: 1 }, { id: 4 }, 'state-update', 'basis B'],
+  ])
+  const first = exportResult(inventory, flow, sourceRoot, 'extended-state')
+  for (let seed = 1; seed <= 12; seed++) {
+    let random = seed
+    const permute = (input: typeof flow | typeof inventory) => {
+      const output = JSON.parse(
+        JSON.stringify(input, (key, value: unknown) =>
+          key === 'id' && typeof value === 'number'
+            ? -value - seed * 1000
+            : value,
+        ),
+      ) as Record<string, { columns: []; tuples: unknown[][] }>
+      for (const entry of Object.values(output)) {
+        for (let index = entry.tuples.length - 1; index > 0; index--) {
+          random = (random * 1664525 + 1013904223) >>> 0
+          const other = random % (index + 1)
+          ;[entry.tuples[index], entry.tuples[other]] = [
+            entry.tuples[other],
+            entry.tuples[index],
+          ]
+        }
+      }
+      return output
+    }
+    assert.deepEqual(
+      exportResult(
+        permute(inventory),
+        permute(flow),
+        sourceRoot,
+        'extended-state',
+      ),
+      first,
+    )
+  }
+})
+
+test('summary grounds remain distinct after call subpaths are expanded', () => {
+  const { inventory, flow } = data()
+  flow.pathEdges = table([
+    [{ id: 1 }, { id: 4 }, 'call-return', 'basis A'],
+    [{ id: 1 }, { id: 4 }, 'call-return', 'basis B'],
+    [{ id: 2 }, { id: 3 }, 'value-flow', ''],
+  ])
+  flow.subpaths = table([[{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]])
+  const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
+  assert.equal(result.paths.length, 4)
+  assert.deepEqual(
+    new Set(
+      result.edges.flatMap((edge) =>
+        edge.summary ? [edge.summary.provenance] : [],
+      ),
+    ),
+    new Set(['basis A', 'basis B']),
+  )
+})
+
+test('lookahead stops at the first additional unique path', () => {
+  const { inventory, flow } = data()
+  flow.pathEdges = table([])
+  flow['#select'] = table([])
+  for (let index = 100; index < 1100; index++) {
+    flow.pathNodes.tuples.push([{ id: index }, 'a', 'invocation ' + index])
+    flow.pathEdges.tuples.push([{ id: index }, { id: 4 }, 'value-flow', ''])
+    flow['#select'].tuples.push(['effect', 0, { id: index }, { id: 4 }])
+  }
+  const result = exportResult(inventory, flow, sourceRoot, 'extended-state', {
+    maxPaths: 1,
+    maxSteps: 10,
+  })
+  assert.equal(result.paths.length, 1)
+  assert(result.searches[0].additionalPathFound && !result.searches[0].complete)
+  assert(result.searches[0].steps < 10)
+  assert(result.diagnostics.some((d) => d.reason === 'path-limit'))
+  assert(!result.diagnostics.some((d) => d.reason === 'step-limit'))
+})
+
+test('annotation closure is independent of input row order', () => {
+  const { inventory, flow } = data()
+  inventory.annotations = table([
+    ['c', 'empty', 'closure-capture', ''],
+    ['dep', 'c', 'closure-capture', ''],
+  ])
+  const first = exportResult(inventory, flow, sourceRoot, 'extended-state')
+  inventory.annotations.tuples.reverse()
+  assert.deepEqual(
+    exportResult(inventory, flow, sourceRoot, 'extended-state'),
+    first,
+  )
+  assert.equal(
+    first.edges.filter((edge) => edge.type === 'closure-capture').length,
+    2,
+  )
+})
+test('exactly two available paths fill a quota of two without truncation', () => {
+  const { inventory, flow } = data()
+  flow.pathEdges.tuples.push(
+    [{ id: 1 }, { id: 3 }, 'value-flow', ''],
+    [{ id: 3 }, { id: 4 }, 'value-flow', ''],
+  )
+  const equal = exportResult(inventory, flow, sourceRoot, 'extended-state', {
+    maxPaths: 2,
+  })
+  assert.equal(equal.paths.length, 4)
+  assert(
+    equal.searches.every(
+      (search) =>
+        search.complete &&
+        search.pathLimitReached &&
+        !search.additionalPathFound,
+    ),
+  )
+  const overflow = exportResult(inventory, flow, sourceRoot, 'extended-state', {
+    maxPaths: 1,
+  })
+  assert.equal(overflow.paths.length, 2)
+  assert(
+    overflow.searches.every(
+      (search) => !search.complete && search.additionalPathFound,
+    ),
+  )
+})
+
+test('bounded selection is independent of aliases with identical context labels', () => {
+  const { inventory, flow } = data()
+  flow.pathNodes.tuples.push([{ id: 11 }, 'a', 'source'])
+  flow.pathEdges = table([
+    [{ id: 1 }, { id: 2 }, 'value-flow', ''],
+    [{ id: 2 }, { id: 4 }, 'value-flow', ''],
+    [{ id: 11 }, { id: 3 }, 'value-flow', ''],
+    [{ id: 3 }, { id: 4 }, 'value-flow', ''],
+  ])
+  flow['#select'] = table([
+    ['effect', 0, { id: 1 }, { id: 4 }],
+    ['effect', 0, { id: 11 }, { id: 4 }],
+  ])
+  for (const maxPaths of [1, 2]) {
+    const original = exportResult(
+      inventory,
+      flow,
+      sourceRoot,
+      'extended-state',
+      { maxPaths },
+    )
+    const changed = JSON.parse(
+      JSON.stringify(flow, (key, value: unknown) =>
+        key === 'id' && typeof value === 'number' ? 10000 - value : value,
+      ),
+    ) as typeof flow
+    for (const table of Object.values(changed)) table.tuples.reverse()
+    assert.deepEqual(
+      exportResult(inventory, changed, sourceRoot, 'extended-state', {
+        maxPaths,
+      }),
+      original,
+    )
+  }
+})
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const table = (tuples: unknown[][]) => ({ columns: [], tuples })
 function data() {

@@ -1490,6 +1490,8 @@
       const data = JSON.parse(
         document.getElementById('report-data').textContent,
       )
+      if (!['1.0.0', '2.0.0'].includes(data.schemaVersion))
+        throw new Error('Unsupported report schema: ' + data.schemaVersion)
       const $ = (id) => document.getElementById(id)
       const entities = new Map(
         data.entities.map((entity) => [entity.id, entity]),
@@ -1982,6 +1984,15 @@
                           edge.evidence.startLine +
                           ':' +
                           edge.evidence.startColumn +
+                          (path.contexts?.[step]
+                            ? '<br>Flow context: ' + escape(path.contexts[step])
+                            : '') +
+                          (edge.summary
+                            ? '<br>Call summary: ' +
+                              escape(edge.summary.type) +
+                              ' · ' +
+                              escape(edge.summary.provenance)
+                            : '') +
                           (edge.callContext
                             ? '<br>Matched call ' +
                               escape(at(entities.get(edge.callContext.site)))
@@ -2004,6 +2015,9 @@
       }
       function renderNotes() {
         const dep = currentDependency()
+        const search = data.searches?.find(
+          (item) => item.dependencyId === dep?.id,
+        )
         const boundaries = data.boundaries.filter(
           (boundary) => boundary.dependencyId === dep?.id,
         )
@@ -2022,9 +2036,20 @@
           icon('info') +
           ' Boundaries & analysis notes' +
           (filtered.length
-            ? ' · ' + filtered.length + ' mismatched paths excluded'
+            ? ' · ' + filtered.length + ' call-context mismatch reports'
             : '')
         $('notes-content').innerHTML =
+          (search?.pathLimitReached
+            ? '<p>' +
+              (search.complete
+                ? 'All ' +
+                  search.retainedPaths +
+                  ' available paths were retained, exactly filling the path quota.'
+                : search.additionalPathFound
+                  ? 'At least one additional admissible unique path was omitted by the path quota.'
+                  : 'The path quota was filled; another budget prevented proving that enumeration is complete.') +
+              '</p>'
+            : '') +
           reasonList
             .map(
               (reason) =>
@@ -2048,7 +2073,7 @@
           (filtered.length
             ? '<p>' +
               filtered.length +
-              ' paths were excluded because their function entry and return call sites did not match.</p>'
+              ' source/call-site mismatch reports were recorded. Candidates with different function entry and return call sites were excluded.</p>'
             : '') +
           '<p>Paths describe possible value flow. They do not infer the order of renders, timers, or state updates.</p>'
       }

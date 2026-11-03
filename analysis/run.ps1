@@ -77,6 +77,7 @@ if ($Expectations) {
   Invoke-Stage 'compare' { Invoke-Native 'node' @((Join-Path $PSScriptRoot 'check.ts'),$output,(Resolve-Path -LiteralPath $Expectations).Path,$source) }
 }
 $manifest = [ordered]@{ schemaVersion='1.0.0'; codeql=$version.version; javascriptAll='2.10.0'; node=$nodeVersion; powershell=$PSVersionTable.PSVersion.ToString(); sourceHashes=$hashes; limits=($limits | ConvertFrom-Json); stages=$timings; database=$database }
+$manifest['resultSchemaVersion'] = '2.0.0'
 [IO.File]::WriteAllText((Join-Path $output 'run.json'), ($manifest | ConvertTo-Json -Depth 12), $utf8)
 Write-Output "Analysis written to $output"
 

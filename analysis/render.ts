@@ -9,6 +9,8 @@ if (!path?.endsWith('.json'))
 const result = JSON.parse(
   readFileSync(path, 'utf8').replace(/^\uFEFF/, ''),
 ) as Result
+if (!['1.0.0', '2.0.0'].includes(result.schemaVersion))
+  throw new Error('Unsupported result schema: ' + result.schemaVersion)
 if (process.argv.includes('--html')) {
   const template = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), 'viewer-template.html'),

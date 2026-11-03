@@ -1,4 +1,5 @@
 {
+  "$paths": "paths.expected.json",
   "lazy-state.tsx": {
     "effectCount": 1,
     "dependencies": [

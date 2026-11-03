@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck:analysis": "tsc --project tsconfig.analysis.json",
+    "typecheck:app": "tsc --project tsconfig.app.json --noEmit",
+    "test:analysis": "node --test analysis/*.test.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -17,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",

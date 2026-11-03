@@ -18,12 +18,23 @@ export type Entity = {
   expression: string
 }
 type Table = { columns: { name: string; kind: string }[]; tuples: unknown[][] }
-type Bqrs = Record<string, Table>
+export type Bqrs = Record<string, Table>
 type RawNode = { entity: string; context: string }
-type RawEdge = { from: string; to: string; kind: string; provenance: string }
+type Summary = { type: string; provenance: string }
+type RawEdge = {
+  from: string
+  to: string
+  kind: string
+  provenance: string
+  summary?: Summary
+}
 type RawPair = { effect: string; index: number; source: string; sink: string }
 type RawSubpath = { arg: string; par: string; ret: string; out: string }
-type CallContext = { action: 'enter' | 'return'; site: string; target: string }
+export type CallContext = {
+  action: 'enter' | 'return'
+  site: string
+  target: string
+}
 export type Limits = {
   maxDepth: number
   maxContexts: number
@@ -44,6 +55,93 @@ const rawId = (v: unknown): string =>
 const rows = (data: Bqrs, name: string): unknown[][] => {
   if (!data[name]) throw new Error('Missing BQRS result set: ' + name)
   return data[name].tuples
+}
+const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+const unique = <T>(values: T[]): T[] => [
+  ...new Map(values.map((value) => [JSON.stringify(value), value])).values(),
+]
+const pairKey = (a: string, b: string) => JSON.stringify([a, b])
+
+/** Refine source-labeled neighborhoods for ordering only; never join contextual nodes. */
+function contextualOrder(
+  nodes: Map<string, RawNode>,
+  adjacency: Map<string, RawEdge[]>,
+  summaries: Map<string, RawSubpath[]>,
+  pairs: RawPair[],
+) {
+  const roles = new Map<string, string[]>()
+  for (const pair of pairs)
+    for (const [node, role] of [
+      [pair.source, 'source'],
+      [pair.sink, 'sink'],
+    ]) {
+      const list = roles.get(node) ?? []
+      list.push(JSON.stringify([role, pair.effect, pair.index]))
+      roles.set(node, list)
+    }
+  const links = new Map<string, { role: string; nodes: string[] }[]>()
+  const link = (node: string, role: string, others: string[]) => {
+    const list = links.get(node) ?? []
+    list.push({ role, nodes: others })
+    links.set(node, list)
+  }
+  for (const list of adjacency.values())
+    for (const edge of list) {
+      const label = JSON.stringify([edge.kind, edge.provenance])
+      link(edge.from, 'out:' + label, [edge.to])
+      link(edge.to, 'in:' + label, [edge.from])
+    }
+  for (const list of summaries.values())
+    for (const sub of list) {
+      const tuple = [sub.arg, sub.par, sub.ret, sub.out]
+      tuple.forEach((node, index) => link(node, 'summary:' + index, tuple))
+    }
+  const base = new Map(
+    [...nodes].map(([id, node]) => [
+      id,
+      JSON.stringify([
+        node.entity,
+        node.context,
+        [...new Set(roles.get(id) ?? [])].sort(compare),
+      ]),
+    ]),
+  )
+  const rank = (keys: Map<string, string>) => {
+    const sorted = [...new Set(keys.values())].sort(compare)
+    const indices = new Map(sorted.map((value, index) => [value, index]))
+    return new Map([...keys].map(([id, key]) => [id, indices.get(key)!]))
+  }
+  let classes = rank(base)
+  for (let round = 0; round < nodes.size; round++) {
+    const keys = new Map(
+      [...nodes.keys()].map((id) => [
+        id,
+        JSON.stringify([
+          base.get(id),
+          classes.get(id),
+          (links.get(id) ?? [])
+            .map((link) =>
+              JSON.stringify([
+                link.role,
+                link.nodes.map((node) => classes.get(node)),
+              ]),
+            )
+            .sort(compare),
+        ]),
+      ]),
+    )
+    const next = rank(keys)
+    const stable =
+      new Set(next.values()).size === new Set(classes.values()).size
+    classes = next
+    if (stable) break
+  }
+  return new Map(
+    [...nodes.keys()].map((id) => [
+      id,
+      JSON.stringify([base.get(id), classes.get(id)]),
+    ]),
+  )
 }
 function location(value: string): Location {
   const match = /^(.*):(\d+):(\d+):(\d+):(\d+)$/.exec(value)
@@ -110,14 +208,19 @@ export function exportResult(
       expression: entities.get(String(entity))?.expression ?? '',
     }))
     .sort((a, b) => a.id.localeCompare(b.id, 'en'))
-  const nodes = new Map<string, RawNode>(
-    rows(flow, 'pathNodes').map(([id, entity, context]) => [
-      rawId(id),
-      { entity: String(entity), context: String(context) },
-    ]),
-  )
+  const nodes = new Map<string, RawNode>()
+  for (const [id, entity, context] of rows(flow, 'pathNodes')) {
+    const key = rawId(id),
+      value = { entity: String(entity), context: String(context) }
+    if (
+      nodes.has(key) &&
+      JSON.stringify(nodes.get(key)) !== JSON.stringify(value)
+    )
+      throw new Error('Conflicting BQRS path node: ' + key)
+    nodes.set(key, value)
+  }
   const adjacency = new Map<string, RawEdge[]>()
-  for (const [a, b, kind, provenance] of rows(flow, 'pathEdges')) {
+  for (const [a, b, kind, provenance] of unique(rows(flow, 'pathEdges'))) {
     const edge = {
       from: rawId(a),
       to: rawId(b),
@@ -130,31 +233,22 @@ export function exportResult(
   }
   const stableRaw = (id: string) => {
     const n = nodes.get(id)
-    return n ? n.entity + ':' + n.context : 'unmapped'
+    return n ? JSON.stringify([n.entity, n.context]) : 'unmapped'
   }
-  for (const list of adjacency.values())
-    list.sort((a, b) => stableRaw(a.to).localeCompare(stableRaw(b.to), 'en'))
   const subpaths = new Map<string, RawSubpath[]>()
-  for (const [arg, par, ret, out] of rows(flow, 'subpaths')) {
+  for (const [arg, par, ret, out] of unique(rows(flow, 'subpaths'))) {
     const s = {
       arg: rawId(arg),
       par: rawId(par),
       ret: rawId(ret),
       out: rawId(out),
     }
-    const key = s.arg + ':' + s.out
+    const key = pairKey(s.arg, s.out)
     const list = subpaths.get(key) ?? []
     list.push(s)
     subpaths.set(key, list)
   }
-  for (const list of subpaths.values())
-    list.sort((a, b) =>
-      (stableRaw(a.par) + stableRaw(a.ret)).localeCompare(
-        stableRaw(b.par) + stableRaw(b.ret),
-        'en',
-      ),
-    )
-  const pairs: RawPair[] = rows(flow, '#select').map(
+  const pairs: RawPair[] = unique(rows(flow, '#select')).map(
     ([effect, index, source, sink]) => ({
       effect: String(effect),
       index: Number(index),
@@ -162,10 +256,36 @@ export function exportResult(
       sink: rawId(sink),
     }),
   )
+  const order = contextualOrder(nodes, adjacency, subpaths, pairs)
+  const nodeOrder = (id: string) => order.get(id) ?? stableRaw(id)
+  for (const list of adjacency.values())
+    list.sort((a, b) =>
+      compare(
+        JSON.stringify([nodeOrder(a.to), a.kind, a.provenance]),
+        JSON.stringify([nodeOrder(b.to), b.kind, b.provenance]),
+      ),
+    )
+  for (const list of subpaths.values())
+    list.sort((a, b) =>
+      compare(
+        JSON.stringify([a.arg, a.par, a.ret, a.out].map(nodeOrder)),
+        JSON.stringify([b.arg, b.par, b.ret, b.out].map(nodeOrder)),
+      ),
+    )
   pairs.sort((a, b) =>
-    (a.effect + ':' + a.index + ':' + stableRaw(a.source)).localeCompare(
-      b.effect + ':' + b.index + ':' + stableRaw(b.source),
-      'en',
+    compare(
+      JSON.stringify([
+        a.effect,
+        a.index,
+        nodeOrder(a.source),
+        nodeOrder(a.sink),
+      ]),
+      JSON.stringify([
+        b.effect,
+        b.index,
+        nodeOrder(b.source),
+        nodeOrder(b.sink),
+      ]),
     ),
   )
   const used = new Set(
@@ -204,6 +324,7 @@ export function exportResult(
       composable: boolean
       provenance: string
       callContext?: CallContext
+      summary?: Summary
     }
   >()
   const paths: {
@@ -213,8 +334,18 @@ export function exportResult(
     sourceRole: string
     nodes: string[]
     edges: string[]
+    contexts: string[]
     stopReason: string
     status: string
+  }[] = []
+  const searches: {
+    dependencyId: string
+    retainedPaths: number
+    pathLimitReached: boolean
+    additionalPathFound: boolean
+    complete: boolean
+    steps: number
+    contexts: number
   }[] = []
   const boundaries: {
     dependencyId: string
@@ -243,13 +374,25 @@ export function exportResult(
     composable: boolean,
     provenance = '',
     callContext?: CallContext,
+    summary?: Summary,
   ) => {
     const target = entities.get(to)
     if (!target || !entities.has(from))
       throw new Error('Unmapped flow entity: ' + from + ' -> ' + to)
     const id =
       'edge:' +
-      hash(JSON.stringify([from, to, type, rule, provenance, callContext]))
+      hash(
+        JSON.stringify([
+          from,
+          to,
+          type,
+          rule,
+          target.location,
+          provenance,
+          callContext,
+          summary,
+        ]),
+      )
     used.add(from)
     used.add(to)
     if (callContext && entities.has(callContext.site))
@@ -265,6 +408,7 @@ export function exportResult(
       composable,
       provenance,
       ...(callContext ? { callContext } : {}),
+      ...(summary ? { summary } : {}),
     })
     return id
   }
@@ -281,19 +425,36 @@ export function exportResult(
     )
     let steps = 0
     let count = 0
+    let additionalPathFound = false
     const contexts = new Set<string>()
     const issues = new Set<string>()
     const dedup = new Set<string>()
+    const registerContext = (context: string) => {
+      if (contexts.has(context)) return true
+      if (contexts.size >= limits.maxContexts) {
+        issues.add('context-limit')
+        return false
+      }
+      contexts.add(context)
+      return true
+    }
     function* walk(
       current: string,
       target: string,
       seen: Set<string>,
       depth: number,
     ): Generator<RawEdge[]> {
-      if (++steps > limits.maxSteps) {
+      if (
+        additionalPathFound ||
+        issues.has('step-limit') ||
+        issues.has('context-limit')
+      )
+        return
+      if (steps >= limits.maxSteps) {
         issues.add('step-limit')
         return
       }
+      steps++
       if (depth > limits.maxDepth) {
         issues.add('depth-limit')
         return
@@ -312,7 +473,7 @@ export function exportResult(
       }
       const nextSeen = new Set(seen).add(current)
       for (const edge of adjacency.get(current) ?? []) {
-        const summaries = subpaths.get(edge.from + ':' + edge.to) ?? []
+        const summaries = subpaths.get(pairKey(edge.from, edge.to)) ?? []
         if (summaries.length > 0) {
           for (const sub of summaries) {
             const evidence = callEvidence.get(
@@ -324,23 +485,21 @@ export function exportResult(
               evidence?.length === 1
                 ? evidence[0].site
                 : stableRaw(sub.arg) + ' -> ' + stableRaw(sub.out)
-            contexts.add(context)
-            if (contexts.size > limits.maxContexts) {
-              issues.add('context-limit')
-              return
-            }
+            if (!registerContext(context)) return
             for (const inner of walk(sub.par, sub.ret, nextSeen, depth + 1)) {
               const enter: RawEdge = {
                 from: sub.arg,
                 to: sub.par,
                 kind: 'call-argument',
                 provenance: 'CodeQL.PathGraph.subpaths',
+                summary: { type: edge.kind, provenance: edge.provenance },
               }
               const leave: RawEdge = {
                 from: sub.ret,
                 to: sub.out,
                 kind: 'call-return',
                 provenance: 'CodeQL.PathGraph.subpaths',
+                summary: { type: edge.kind, provenance: edge.provenance },
               }
               for (const tail of walk(
                 edge.to,
@@ -349,33 +508,36 @@ export function exportResult(
                 depth + inner.length + 2,
               )) {
                 yield [enter, ...inner, leave, ...tail]
-                if (count >= limits.maxPaths || steps > limits.maxSteps) return
+                if (
+                  additionalPathFound ||
+                  issues.has('step-limit') ||
+                  issues.has('context-limit')
+                )
+                  return
               }
             }
           }
         } else {
           for (const tail of walk(edge.to, target, nextSeen, depth + 1)) {
             yield [edge, ...tail]
-            if (count >= limits.maxPaths || steps > limits.maxSteps) return
+            if (
+              additionalPathFound ||
+              issues.has('step-limit') ||
+              issues.has('context-limit')
+            )
+              return
           }
         }
       }
     }
     for (const pair of relevant) {
-      if (count >= limits.maxPaths) {
-        issues.add('path-limit')
-        break
-      }
+      if (additionalPathFound) break
       const source = nodes.get(pair.source)
       if (!source) {
         issues.add('unmapped-codeql-node')
         continue
       }
       for (const raw of walk(pair.source, pair.sink, new Set(), 0)) {
-        if (count >= limits.maxPaths) {
-          issues.add('path-limit')
-          break
-        }
         if (raw.length > limits.maxDepth) {
           issues.add('depth-limit')
           continue
@@ -400,9 +562,7 @@ export function exportResult(
             }
             const context = actions[0]
             if (!context) continue
-            contexts.add(context.site)
-            if (contexts.size > limits.maxContexts) {
-              issues.add('context-limit')
+            if (!registerContext(context.site)) {
               rejected = true
               break
             }
@@ -432,9 +592,32 @@ export function exportResult(
           }
           if (rejected) continue
         }
-        const key = JSON.stringify(sequence)
+        const pathContexts = [
+          source.context,
+          ...raw.map((edge) => nodes.get(edge.to)!.context),
+        ]
+        const transitions = raw.map((edge) => ({
+          from: nodes.get(edge.from)!.entity,
+          to: nodes.get(edge.to)!.entity,
+          type: edge.kind,
+          evidence: entities.get(nodes.get(edge.to)!.entity)!.location,
+          rule:
+            edge.kind === 'callback-identity'
+              ? 'extension.react-callback-identity'
+              : 'CodeQL.' + mode,
+          provenance: edge.provenance,
+          callContext:
+            edgeContexts(edge).length === 1 ? edgeContexts(edge)[0] : undefined,
+          summary: edge.summary,
+        }))
+        const key = JSON.stringify([sequence, pathContexts, transitions])
         if (dedup.has(key)) continue
         dedup.add(key)
+        if (count === limits.maxPaths) {
+          additionalPathFound = true
+          issues.add('path-limit')
+          break
+        }
         const origin = entities.get(source.entity)!
         used.add(source.entity)
         const ids = raw.map((e) =>
@@ -448,6 +631,7 @@ export function exportResult(
             true,
             e.provenance,
             edgeContexts(e).length === 1 ? edgeContexts(e)[0] : undefined,
+            e.summary,
           ),
         )
         const stopReason =
@@ -473,6 +657,7 @@ export function exportResult(
           sourceRole,
           nodes: sequence,
           edges: ids,
+          contexts: pathContexts,
           stopReason,
           status: 'modeled',
         })
@@ -484,9 +669,17 @@ export function exportResult(
         })
         count++
       }
-      if (steps > limits.maxSteps || contexts.size > limits.maxContexts) break
+      if (issues.has('step-limit') || issues.has('context-limit')) break
     }
-    if (count >= limits.maxPaths) issues.add('path-limit')
+    searches.push({
+      dependencyId: dep.id,
+      retainedPaths: count,
+      pathLimitReached: count === limits.maxPaths,
+      additionalPathFound,
+      complete: [...issues].every((reason) => reason === 'cycle'),
+      steps,
+      contexts: contexts.size,
+    })
     if (count === 0)
       boundaries.push({
         dependencyId: dep.id,
@@ -501,11 +694,18 @@ export function exportResult(
         status: reason === 'cycle' ? 'bounded' : 'truncated',
       })
   }
-  for (const [parent, child, kind] of rows(
-    inventory,
-    'annotations',
-  ) as string[][]) {
-    if (used.has(parent) && entities.has(child))
+  const annotations = new Map<string, string[][]>()
+  for (const row of unique(rows(inventory, 'annotations')) as string[][]) {
+    const list = annotations.get(row[0]) ?? []
+    list.push(row)
+    annotations.set(row[0], list)
+  }
+  const annotated = [...used]
+  for (let index = 0; index < annotated.length; index++) {
+    for (const [parent, child, kind] of annotations.get(annotated[index]) ??
+      []) {
+      if (!entities.has(child)) continue
+      const newlyReached = !used.has(child)
       addEdge(
         child,
         parent,
@@ -515,6 +715,8 @@ export function exportResult(
           : 'annotation.declared-hook-dependency',
         false,
       )
+      if (newlyReached) annotated.push(child)
+    }
   }
   for (const effect of effects) {
     if (effect.mode === 'unsupported')
@@ -525,7 +727,7 @@ export function exportResult(
       })
   }
   return {
-    schemaVersion: '1.0.0',
+    schemaVersion: '2.0.0',
     mode,
     limits,
     semantics: {
@@ -534,6 +736,8 @@ export function exportResult(
       annotationsComposable: false,
       stateOrdering: 'not-modeled',
       capturedParameterContextCheck: mode.startsWith('extended'),
+      pathEquivalence:
+        'dependency, ordered entities and contextual labels, ordered transition types, evidence, rules, provenance, call contexts and summaries',
       approximations: [
         'CodeQL may-flow analysis',
         'captured variables may be flow-insensitive',
@@ -547,16 +751,17 @@ export function exportResult(
       .sort((a, b) => a.id.localeCompare(b.id, 'en')),
     edges: [...edgeMap.values()].sort((a, b) => a.id.localeCompare(b.id, 'en')),
     paths: paths.sort((a, b) => a.id.localeCompare(b.id, 'en')),
-    boundaries: boundaries.sort((a, b) =>
+    boundaries: unique(boundaries).sort((a, b) =>
       JSON.stringify(a).localeCompare(JSON.stringify(b), 'en'),
     ),
     diagnostics: diagnostics.sort((a, b) =>
       JSON.stringify(a).localeCompare(JSON.stringify(b), 'en'),
     ),
-    filteredPaths: filteredPaths.sort((a, b) =>
+    filteredPaths: unique(filteredPaths).sort((a, b) =>
       JSON.stringify(a).localeCompare(JSON.stringify(b), 'en'),
     ),
     truncated: diagnostics.some((d) => d.status === 'truncated'),
+    searches,
   }
 }
 export function toDot(result: Result) {

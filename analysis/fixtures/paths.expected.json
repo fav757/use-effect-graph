@@ -1,0 +1,1119 @@
+{
+  "schemaVersion": "1.0.0",
+  "required": [
+    {
+      "id": "calls-left",
+      "description": "first returns its first parameter; the unused argument is not a value origin.",
+      "effect": {
+        "file": "calls.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "calls.tsx",
+        "startLine": 4,
+        "startColumn": 22,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "calls.tsx",
+          "startLine": 2,
+          "startColumn": 16,
+          "kind": "parameter"
+        },
+        {
+          "file": "calls.tsx",
+          "startLine": 2,
+          "startColumn": 56,
+          "kind": "value"
+        },
+        {
+          "file": "calls.tsx",
+          "startLine": 4,
+          "startColumn": 16,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "calls.tsx",
+            "startLine": 4,
+            "startColumn": 22,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "calls.tsx",
+            "startLine": 2,
+            "startColumn": 16,
+            "kind": "parameter"
+          },
+          "type": "call-argument",
+          "callContext": {
+            "action": "enter",
+            "site": {
+              "file": "calls.tsx",
+              "startLine": 4,
+              "startColumn": 16
+            },
+            "target": {
+              "file": "calls.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "calls.tsx",
+            "startLine": 2,
+            "startColumn": 16
+          }
+        },
+        {
+          "from": {
+            "file": "calls.tsx",
+            "startLine": 2,
+            "startColumn": 56,
+            "kind": "value"
+          },
+          "to": {
+            "file": "calls.tsx",
+            "startLine": 4,
+            "startColumn": 16,
+            "kind": "value"
+          },
+          "type": "call-return",
+          "callContext": {
+            "action": "return",
+            "site": {
+              "file": "calls.tsx",
+              "startLine": 4,
+              "startColumn": 16
+            },
+            "target": {
+              "file": "calls.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "calls.tsx",
+            "startLine": 4,
+            "startColumn": 16
+          }
+        }
+      ]
+    },
+    {
+      "id": "calls-right",
+      "description": "first returns its first parameter; the unused argument is not a value origin.",
+      "effect": {
+        "file": "calls.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "calls.tsx",
+        "startLine": 5,
+        "startColumn": 23,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "calls.tsx",
+          "startLine": 2,
+          "startColumn": 16,
+          "kind": "parameter"
+        },
+        {
+          "file": "calls.tsx",
+          "startLine": 2,
+          "startColumn": 56,
+          "kind": "value"
+        },
+        {
+          "file": "calls.tsx",
+          "startLine": 5,
+          "startColumn": 17,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "calls.tsx",
+            "startLine": 5,
+            "startColumn": 23,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "calls.tsx",
+            "startLine": 2,
+            "startColumn": 16,
+            "kind": "parameter"
+          },
+          "type": "call-argument",
+          "callContext": {
+            "action": "enter",
+            "site": {
+              "file": "calls.tsx",
+              "startLine": 5,
+              "startColumn": 17
+            },
+            "target": {
+              "file": "calls.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "calls.tsx",
+            "startLine": 2,
+            "startColumn": 16
+          }
+        },
+        {
+          "from": {
+            "file": "calls.tsx",
+            "startLine": 2,
+            "startColumn": 56,
+            "kind": "value"
+          },
+          "to": {
+            "file": "calls.tsx",
+            "startLine": 5,
+            "startColumn": 17,
+            "kind": "value"
+          },
+          "type": "call-return",
+          "callContext": {
+            "action": "return",
+            "site": {
+              "file": "calls.tsx",
+              "startLine": 5,
+              "startColumn": 17
+            },
+            "target": {
+              "file": "calls.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "calls.tsx",
+            "startLine": 5,
+            "startColumn": 17
+          }
+        }
+      ]
+    },
+    {
+      "id": "useLocal-left",
+      "description": "The initializer belongs to this invocation of useLocal; the state slot and returned tuple are mandatory checkpoints.",
+      "effect": {
+        "file": "custom-hooks.tsx",
+        "startLine": 10,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "custom-hooks.tsx",
+        "startLine": 8,
+        "startColumn": 27,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 2,
+          "startColumn": 19,
+          "kind": "parameter"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 3,
+          "startColumn": 38,
+          "kind": "value"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 5,
+          "startColumn": 10,
+          "kind": "value"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 8,
+          "startColumn": 18,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "custom-hooks.tsx",
+            "startLine": 8,
+            "startColumn": 27,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "custom-hooks.tsx",
+            "startLine": 2,
+            "startColumn": 19,
+            "kind": "parameter"
+          },
+          "type": "call-argument",
+          "callContext": {
+            "action": "enter",
+            "site": {
+              "file": "custom-hooks.tsx",
+              "startLine": 8,
+              "startColumn": 18
+            },
+            "target": {
+              "file": "custom-hooks.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "custom-hooks.tsx",
+            "startLine": 2,
+            "startColumn": 19
+          }
+        },
+        {
+          "from": {
+            "file": "custom-hooks.tsx",
+            "startLine": 3,
+            "startColumn": 38,
+            "kind": "value"
+          },
+          "to": {
+            "file": "custom-hooks.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-initial",
+          "evidence": {
+            "file": "custom-hooks.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        },
+        {
+          "from": {
+            "file": "custom-hooks.tsx",
+            "startLine": 5,
+            "startColumn": 10,
+            "kind": "value"
+          },
+          "to": {
+            "file": "custom-hooks.tsx",
+            "startLine": 8,
+            "startColumn": 18,
+            "kind": "value"
+          },
+          "type": "call-return",
+          "callContext": {
+            "action": "return",
+            "site": {
+              "file": "custom-hooks.tsx",
+              "startLine": 8,
+              "startColumn": 18
+            },
+            "target": {
+              "file": "custom-hooks.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "custom-hooks.tsx",
+            "startLine": 8,
+            "startColumn": 18
+          }
+        }
+      ]
+    },
+    {
+      "id": "useLocal-right",
+      "description": "The initializer belongs to this invocation of useLocal; the state slot and returned tuple are mandatory checkpoints.",
+      "effect": {
+        "file": "custom-hooks.tsx",
+        "startLine": 10,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "custom-hooks.tsx",
+        "startLine": 9,
+        "startColumn": 28,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 2,
+          "startColumn": 19,
+          "kind": "parameter"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 3,
+          "startColumn": 38,
+          "kind": "value"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 5,
+          "startColumn": 10,
+          "kind": "value"
+        },
+        {
+          "file": "custom-hooks.tsx",
+          "startLine": 9,
+          "startColumn": 19,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "custom-hooks.tsx",
+            "startLine": 9,
+            "startColumn": 28,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "custom-hooks.tsx",
+            "startLine": 2,
+            "startColumn": 19,
+            "kind": "parameter"
+          },
+          "type": "call-argument",
+          "callContext": {
+            "action": "enter",
+            "site": {
+              "file": "custom-hooks.tsx",
+              "startLine": 9,
+              "startColumn": 19
+            },
+            "target": {
+              "file": "custom-hooks.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "custom-hooks.tsx",
+            "startLine": 2,
+            "startColumn": 19
+          }
+        },
+        {
+          "from": {
+            "file": "custom-hooks.tsx",
+            "startLine": 3,
+            "startColumn": 38,
+            "kind": "value"
+          },
+          "to": {
+            "file": "custom-hooks.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-initial",
+          "evidence": {
+            "file": "custom-hooks.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        },
+        {
+          "from": {
+            "file": "custom-hooks.tsx",
+            "startLine": 5,
+            "startColumn": 10,
+            "kind": "value"
+          },
+          "to": {
+            "file": "custom-hooks.tsx",
+            "startLine": 9,
+            "startColumn": 19,
+            "kind": "value"
+          },
+          "type": "call-return",
+          "callContext": {
+            "action": "return",
+            "site": {
+              "file": "custom-hooks.tsx",
+              "startLine": 9,
+              "startColumn": 19
+            },
+            "target": {
+              "file": "custom-hooks.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "custom-hooks.tsx",
+            "startLine": 9,
+            "startColumn": 19
+          }
+        }
+      ]
+    },
+    {
+      "id": "useLazy-left",
+      "description": "The initializer belongs to this invocation of useLazy; the state slot and returned tuple are mandatory checkpoints.",
+      "effect": {
+        "file": "lazy-state.tsx",
+        "startLine": 9,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "lazy-state.tsx",
+        "startLine": 7,
+        "startColumn": 26,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 2,
+          "startColumn": 18,
+          "kind": "parameter"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 3,
+          "startColumn": 34,
+          "kind": "value"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 4,
+          "startColumn": 10,
+          "kind": "value"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 7,
+          "startColumn": 18,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "lazy-state.tsx",
+            "startLine": 7,
+            "startColumn": 26,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "lazy-state.tsx",
+            "startLine": 2,
+            "startColumn": 18,
+            "kind": "parameter"
+          },
+          "type": "call-argument",
+          "callContext": {
+            "action": "enter",
+            "site": {
+              "file": "lazy-state.tsx",
+              "startLine": 7,
+              "startColumn": 18
+            },
+            "target": {
+              "file": "lazy-state.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "lazy-state.tsx",
+            "startLine": 2,
+            "startColumn": 18
+          }
+        },
+        {
+          "from": {
+            "file": "lazy-state.tsx",
+            "startLine": 3,
+            "startColumn": 34,
+            "kind": "value"
+          },
+          "to": {
+            "file": "lazy-state.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-initial",
+          "evidence": {
+            "file": "lazy-state.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        },
+        {
+          "from": {
+            "file": "lazy-state.tsx",
+            "startLine": 4,
+            "startColumn": 10,
+            "kind": "value"
+          },
+          "to": {
+            "file": "lazy-state.tsx",
+            "startLine": 7,
+            "startColumn": 18,
+            "kind": "value"
+          },
+          "type": "call-return",
+          "callContext": {
+            "action": "return",
+            "site": {
+              "file": "lazy-state.tsx",
+              "startLine": 7,
+              "startColumn": 18
+            },
+            "target": {
+              "file": "lazy-state.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "lazy-state.tsx",
+            "startLine": 7,
+            "startColumn": 18
+          }
+        }
+      ]
+    },
+    {
+      "id": "useLazy-right",
+      "description": "The initializer belongs to this invocation of useLazy; the state slot and returned tuple are mandatory checkpoints.",
+      "effect": {
+        "file": "lazy-state.tsx",
+        "startLine": 9,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "lazy-state.tsx",
+        "startLine": 8,
+        "startColumn": 27,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 2,
+          "startColumn": 18,
+          "kind": "parameter"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 3,
+          "startColumn": 34,
+          "kind": "value"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 4,
+          "startColumn": 10,
+          "kind": "value"
+        },
+        {
+          "file": "lazy-state.tsx",
+          "startLine": 8,
+          "startColumn": 19,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "lazy-state.tsx",
+            "startLine": 8,
+            "startColumn": 27,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "lazy-state.tsx",
+            "startLine": 2,
+            "startColumn": 18,
+            "kind": "parameter"
+          },
+          "type": "call-argument",
+          "callContext": {
+            "action": "enter",
+            "site": {
+              "file": "lazy-state.tsx",
+              "startLine": 8,
+              "startColumn": 19
+            },
+            "target": {
+              "file": "lazy-state.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "lazy-state.tsx",
+            "startLine": 2,
+            "startColumn": 18
+          }
+        },
+        {
+          "from": {
+            "file": "lazy-state.tsx",
+            "startLine": 3,
+            "startColumn": 34,
+            "kind": "value"
+          },
+          "to": {
+            "file": "lazy-state.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-initial",
+          "evidence": {
+            "file": "lazy-state.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        },
+        {
+          "from": {
+            "file": "lazy-state.tsx",
+            "startLine": 4,
+            "startColumn": 10,
+            "kind": "value"
+          },
+          "to": {
+            "file": "lazy-state.tsx",
+            "startLine": 8,
+            "startColumn": 19,
+            "kind": "value"
+          },
+          "type": "call-return",
+          "callContext": {
+            "action": "return",
+            "site": {
+              "file": "lazy-state.tsx",
+              "startLine": 8,
+              "startColumn": 19
+            },
+            "target": {
+              "file": "lazy-state.tsx",
+              "startLine": 2,
+              "startColumn": 1
+            }
+          },
+          "evidence": {
+            "file": "lazy-state.tsx",
+            "startLine": 8,
+            "startColumn": 19
+          }
+        }
+      ]
+    },
+    {
+      "id": "state-initial",
+      "description": "Initial state and subsequent setter values use different transitions.",
+      "effect": {
+        "file": "state.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "state.tsx",
+        "startLine": 3,
+        "startColumn": 38,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "state.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 38,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-initial",
+          "evidence": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "state-setter",
+      "description": "Initial state and subsequent setter values use different transitions.",
+      "effect": {
+        "file": "state.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "state.tsx",
+        "startLine": 4,
+        "startColumn": 30,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "state.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "state.tsx",
+            "startLine": 4,
+            "startColumn": 30,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-update",
+          "evidence": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "state-functional",
+      "description": "The suffix contributes through the updater return expression; this is not initialization.",
+      "effect": {
+        "file": "state.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "state.tsx",
+        "startLine": 5,
+        "startColumn": 53,
+        "kind": "literal"
+      },
+      "stopReason": "literal",
+      "via": [
+        {
+          "file": "state.tsx",
+          "startLine": 5,
+          "startColumn": 42,
+          "kind": "value"
+        },
+        {
+          "file": "state.tsx",
+          "startLine": 3,
+          "startColumn": 10,
+          "kind": "react-state"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "state.tsx",
+            "startLine": 5,
+            "startColumn": 53,
+            "kind": "literal"
+          },
+          "to": {
+            "file": "state.tsx",
+            "startLine": 5,
+            "startColumn": 42,
+            "kind": "value"
+          },
+          "type": "transformation",
+          "evidence": {
+            "file": "state.tsx",
+            "startLine": 5,
+            "startColumn": 42
+          }
+        },
+        {
+          "from": {
+            "file": "state.tsx",
+            "startLine": 5,
+            "startColumn": 42,
+            "kind": "value"
+          },
+          "to": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 10,
+            "kind": "react-state"
+          },
+          "type": "state-update-functional",
+          "evidence": {
+            "file": "state.tsx",
+            "startLine": 3,
+            "startColumn": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "callback-identity",
+      "description": "useCallback returns the callback identity; captured values do not become its value origins.",
+      "effect": {
+        "file": "memo.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "memo.tsx",
+        "startLine": 5,
+        "startColumn": 32,
+        "kind": "function-creation"
+      },
+      "stopReason": "function-identity",
+      "via": [
+        {
+          "file": "memo.tsx",
+          "startLine": 5,
+          "startColumn": 20,
+          "kind": "value"
+        }
+      ],
+      "transitions": [
+        {
+          "from": {
+            "file": "memo.tsx",
+            "startLine": 5,
+            "startColumn": 32,
+            "kind": "function-creation"
+          },
+          "to": {
+            "file": "memo.tsx",
+            "startLine": 5,
+            "startColumn": 20,
+            "kind": "value"
+          },
+          "type": "callback-identity",
+          "rule": "extension.react-callback-identity",
+          "evidence": {
+            "file": "memo.tsx",
+            "startLine": 5,
+            "startColumn": 20
+          }
+        }
+      ]
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "calls-no-cross-left",
+      "effect": {
+        "file": "calls.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "calls.tsx",
+        "startLine": 4,
+        "startColumn": 22,
+        "kind": "literal"
+      }
+    },
+    {
+      "id": "calls-no-cross-right",
+      "effect": {
+        "file": "calls.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "calls.tsx",
+        "startLine": 5,
+        "startColumn": 23,
+        "kind": "literal"
+      }
+    },
+    {
+      "id": "useLocal-no-cross-left",
+      "effect": {
+        "file": "custom-hooks.tsx",
+        "startLine": 10,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "custom-hooks.tsx",
+        "startLine": 8,
+        "startColumn": 27,
+        "kind": "literal"
+      }
+    },
+    {
+      "id": "useLocal-no-cross-right",
+      "effect": {
+        "file": "custom-hooks.tsx",
+        "startLine": 10,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "custom-hooks.tsx",
+        "startLine": 9,
+        "startColumn": 28,
+        "kind": "literal"
+      }
+    },
+    {
+      "id": "useLazy-no-cross-left",
+      "effect": {
+        "file": "lazy-state.tsx",
+        "startLine": 9,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "lazy-state.tsx",
+        "startLine": 7,
+        "startColumn": 26,
+        "kind": "literal"
+      }
+    },
+    {
+      "id": "useLazy-no-cross-right",
+      "effect": {
+        "file": "lazy-state.tsx",
+        "startLine": 9,
+        "startColumn": 3
+      },
+      "dependencyIndex": 0,
+      "source": {
+        "file": "lazy-state.tsx",
+        "startLine": 8,
+        "startColumn": 27,
+        "kind": "literal"
+      }
+    },
+    {
+      "id": "callback-no-captured-origin",
+      "effect": {
+        "file": "memo.tsx",
+        "startLine": 6,
+        "startColumn": 3
+      },
+      "dependencyIndex": 1,
+      "source": {
+        "file": "memo.tsx",
+        "startLine": 3,
+        "startColumn": 20,
+        "kind": "literal"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "from": {
+        "file": "memo.tsx",
+        "startLine": 5,
+        "startColumn": 38,
+        "kind": "value"
+      },
+      "to": {
+        "file": "memo.tsx",
+        "startLine": 5,
+        "startColumn": 32,
+        "kind": "function-creation"
+      },
+      "type": "closure-capture",
+      "composable": false
+    },
+    {
+      "from": {
+        "file": "memo.tsx",
+        "startLine": 5,
+        "startColumn": 49,
+        "kind": "value"
+      },
+      "to": {
+        "file": "memo.tsx",
+        "startLine": 5,
+        "startColumn": 20,
+        "kind": "value"
+      },
+      "type": "hook-dependency",
+      "composable": false
+    }
+  ]
+}

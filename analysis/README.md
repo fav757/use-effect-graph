@@ -10,15 +10,23 @@ tool versions, timings, and reproducibility results from this implementation.
 Run from the repository root:
 
 ```powershell
+npm run typecheck:analysis
+npm run typecheck:app
+npm run test:analysis
 powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1
 node analysis/app-check.ts codeql-graph/provenance
-node --test analysis/export.test.ts
 
 powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1 `
   -SourceDirectory analysis/fixtures `
   -OutputDirectory codeql-graph/provenance-fixtures `
   -Expectations analysis/fixtures/expected.json
 ```
+
+Install dependencies with `npm ci` first. `@types/node` targets Node 24 and is
+locked in `package-lock.json`. `tsconfig.analysis.json` checks `analysis/*.ts`,
+including the exporter and oracle tests, with strict checking and no emit.
+Intentionally incomplete fixtures are excluded. The application check remains
+limited to `src`; neither command runs a build or ESLint.
 
 The default input is `src`. Pass another source directory with
 `-SourceDirectory` and a separate `-OutputDirectory`. Output must be outside
@@ -111,6 +119,14 @@ Standard CodeQL mechanisms are dependencies, not claims of scientific novelty.
 
 ## JSON and composition contract
 
+New exports use **schema 2.0.0**. Version 2 adds ordered contextual node labels
+on paths, preserves call-summary grounds on edges, and exposes per-dependency
+enumeration results in `searches`. Path/edge IDs have changed deliberately;
+consumers must not reuse version-1 cached IDs. Source-based entity IDs remain
+unchanged. The report renderer accepts versions 1 and 2; version-2 context and
+budget evidence is shown in transition details and analysis notes. Independent
+path checking requires version 2.
+
 `<mode>.json` contains:
 
 - `effects`: coordinates and `literal`, `empty`, `absent`, or
@@ -122,15 +138,40 @@ Standard CodeQL mechanisms are dependencies, not claims of scientific novelty.
 - `edges`: source → value → dependency → Effect direction, type, evidence
   coordinates, rule, status, provenance, and composition eligibility.
 - `paths`: dependency ID, candidate source/role, ordered entity and edge IDs,
-  stop reason and model status.
+  ordered `contexts` (one CodeQL contextual label per node), stop reason and
+  model status.
+- `searches`: retained path count, whether the quota was filled, whether an
+  additional admissible unique path was found, enumeration completeness, and
+  consumed step/context budgets for each dependency.
 - `boundaries`, `diagnostics`, `limits`, approximation notes and `truncated`.
-  `filteredPaths` separately records paths rejected by call-site matching.
+  `filteredPaths` separately records unique source/call-site mismatch reports;
+  it is not a count of all rejected raw routes.
 
 Entity IDs use relative positions, kinds and descriptive labels. Edge/path IDs
 hash source-based values. BQRS entity numbers are used only as temporary
 references while enumerating paths. They are never output as stable program
 IDs. Changing source coordinates changes identity. Arrays are sorted; timings
 and database locations are isolated in `run.json`.
+
+Two paths are equivalent only when they have the same dependency position,
+ordered entity IDs, ordered contextual node labels, and ordered transitions.
+Each transition includes its endpoints, type, evidence coordinates, rule,
+provenance, matched call context (action, source-based call site and target
+function position), and any call-summary grounds. Source role and stop reason
+are derived from the common source entity and analysis mode. Different state
+initial/update transitions, provenance, or meaningful call contexts therefore
+remain different paths even when the entity sequence is identical.
+
+Exact duplicate BQRS rows are normalized before traversal. Contextual nodes
+remain separate during traversal; semantic path duplicates are merged only
+after call-context validation. Stable neighborhood refinement orders otherwise
+tied nodes without using BQRS numbers, including when budgets stop enumeration
+early. It does not join graph nodes. Temporary entity numbers are used only
+to follow BQRS relations and detect cycles. Path IDs hash the complete semantic
+path key; edge IDs include their evidence and summary grounds. Boundary and
+rejected-context records merge only identical records. Annotation reachability
+is computed to a fixed point, independently of row order, and remains
+non-composable.
 
 Origins include literals, object/array/function allocation sites, state slots,
 and unknown calls. Parameters/properties are also exported as
@@ -178,7 +219,29 @@ Default export budgets per dependency: depth 96, 64 distinct matched call-site
 or summary-context keys,
 128 paths and 50,000 exploration steps. Override with `-MaxDepth`,
 `-MaxContexts`, `-MaxPaths`, `-MaxSteps`. A repeated contextual node terminates
-a cyclic branch. Reached budgets yield diagnostics and `truncated: true`.
+a cyclic branch. Cycles are recorded as `bounded`; completeness refers to the
+available graph under that cycle-cutting policy, not completeness of program
+semantics.
+
+Filling the unique-path quota alone does **not** imply truncation. Enumeration
+continues only to establish exhaustion or find the first additional admissible
+unique path. Equivalent duplicates and context-rejected candidates do not
+consume the path quota. The lookahead still obeys depth, context and step
+budgets; it never requires unbounded path enumeration.
+
+- Exactly all available paths retained: `searches[].complete: true`, even if
+  `pathLimitReached: true`; no `path-limit` diagnostic.
+- One additional admissible unique path found and omitted:
+  `additionalPathFound: true`, `complete: false`, `path-limit`, and
+  `truncated: true`. No count of unvisited paths is claimed.
+- Another budget stops the search before completeness can be established:
+  `complete: false` and the actual `depth-limit`, `context-limit` or
+  `step-limit` diagnostic. A path-limit diagnostic is not invented.
+
+Step counts include attempted candidates, including semantic duplicates and
+rejected contexts; exact duplicate table rows are removed first. Contexts count
+distinct call-site/summary keys. Available graph enumeration can be complete
+while external calls or interfaces still remain model boundaries.
 These are export bounds; standard CodeQL model/context/access-path
 approximations still apply. `-Threads` and `-Ram` control CodeQL resources.
 
@@ -189,6 +252,44 @@ The independent fixtures and positive/negative expectations are handwritten.
 empty Effects, annotation isolation, and stable output under BQRS renumbering.
 `app-check.ts` checks the requested application cases and both state levels.
 
+`expected.json` retains its original per-file positive/negative source
+assertions and adds `"$paths": "paths.expected.json"`, resolved relative to
+that file. The companion path oracle has its own `schemaVersion: "1.0.0"`
+and `required`, `forbidden`, and optional `annotations` arrays.
+
+Each path case specifies an `id`, an Effect position, `dependencyIndex`, and a
+source selector. Positions require `file`, `startLine`, and `startColumn`;
+inclusive end coordinates are optional. Entity selectors can also constrain
+`kind` and `expression`. Required cases specify `stopReason`, an optional
+ordered `via` subsequence of intermediate entities, and ordered `transitions`.
+Each transition must be an actual adjacent edge with matching `from`, `to`,
+`type`, optional `rule`/`evidence`/`provenance`, and optional `callContext`
+(`action`, call-site position, target function position). Checkpoints allow
+additional SSA aliases without accepting arbitrary rewiring.
+
+Every path with the selected Effect/index/source must satisfy a required case;
+one good witness cannot hide a corrupted sibling. Forbidden cases reject any
+matching route (or all routes from the selected source when no further
+constraints are given). Annotation cases require exact source positions and
+`composable: false`. All paths are also checked for endpoint agreement,
+node/edge connectivity, contextual-label coverage, and absence of annotation
+edges in value paths.
+
+Native flow cases compare transition semantics and evidence across configurations;
+they do not pin the incidental `CodeQL.<mode>` label. The callback extension
+additionally pins its explicit `extension.react-callback-identity` rule.
+
+The 10 required source-authored cases cover ordinary function calls, custom
+hooks, captured lazy initializers, state initialization, direct/functional
+setter updates and callback identity. Seven forbidden routes exclude crossed
+invocations and captured-value identity provenance; two annotation assertions
+keep lexical captures and declared Hook dependencies separate. Coordinates
+were derived from fixture sources and the documented model, not accepted from
+analyzer snapshots. `path-oracle.test.ts` deliberately corrupts transition
+types, call contexts, intermediate connections and stop reasons while keeping
+the source unchanged, and also checks source positions and Effect/index
+selection.
+
 `check.ts` writes `comparison.json` with found, missing and forbidden links
 for all modes. The unit is an Effect source position, dependency index and
 origin expression position. Fixture literal labels are unique, so handwritten
@@ -197,4 +298,7 @@ The baseline adapter projects reachable variables onto their assigned
 expressions; it adds no call/property reasoning. Its lack of standalone Effect
 inventory is reported rather than scored using another analyzer's inventory.
 Scores cover only explicit oracle assertions, not exhaustive real-world
-precision/recall. An extended-state assertion failure exits with nonzero status.
+precision/recall. `comparison.json.pathChecks` reports the independent path
+oracle for each flow mode; the syntactic baseline has no comparable path
+witnesses and is not path-scored. Any extended-state source, inventory or path
+assertion failure exits with nonzero status.
