@@ -1,338 +1,251 @@
 # use-effect-graph
 
-The extended analyzer exports structured provenance JSON, contextual paths,
-state boundaries/history, and a JSON-based Graphviz viewer. See
-[analysis/README.md](analysis/README.md) for the reproducible workflow and
-comparison with the preserved baseline described below.
+Static analysis of React `useEffect` dependencies with CodeQL, structured JSON
+provenance, and an offline graph explorer. A React 19.2 / TypeScript / Vite
+dashboard provides the example application.
 
-This project contains a custom CodeQL graph query for React `useEffect`
-dependencies and callback patterns. The query finds `useEffect` calls with
-array-literal dependency lists, follows the variables referenced by each entry,
-and shows Effect Events and stable callbacks on separate paths.
+The repository includes two workflows:
 
-For example:
+- **Provenance analyzer:** tracks possible value sources for each dependency
+  position, preserves call contexts, and separates state boundaries from possible
+  initializer/setter values. Start here for the current analyzer and viewer.
+- **Original dependency graph:** follows syntactic variable references with
+  `example.ql` and renders CSV edges. Preserved as the comparison baseline.
 
-```ts
-const request = makeRequest(userId)
+See [the analyzer guide](analysis/README.md) for the JSON contract, modeling
+rules, path oracle, and traversal budgets. [The recorded results](analysis/RESULTS.md)
+document earlier verification and comparisons; they are not checks performed
+when you clone or run this project.
 
-useEffect(() => {
-  // ...
-}, [request])
+## Setup and example application
+
+Use Node.js **24+** and npm. The analysis scripts execute TypeScript directly
+with Node.
+
+Run commands from the repository root:
+
+```powershell
+npm ci
+npm run dev
 ```
 
-Produces edges similar to:
+Open the local URL printed by Vite. The dashboard uses local mock data from
+[`src/data/mockApi.ts`](src/data/mockApi.ts), with simulated delays and abortable
+requests; no backend or API credentials are required.
+
+The example covers:
+
+- Debounced directory search, account-status filters, and pagination.
+- User activity, manual refresh, and configurable automatic refresh.
+- Theme, page size, and refresh interval persisted in local storage.
+- Browser online/offline events; going offline disables automatic refresh.
+- `useEffectEvent` in the activity timer: ticks read the latest loading state
+  and filter without restarting the timer when those values change.
+- A local `useStableCallback` hook for settings actions: a stable function
+  identity delegates to a callback ref updated in a layout effect.
+
+## Run the provenance analyzer
+
+In addition to Node/npm dependencies, install:
+
+- PowerShell.
+- CodeQL CLI; the documented toolchain uses **2.26.4**.
+- The CodeQL JavaScript library pack **`codeql/javascript-all` 2.10.0**. The
+  query pack pins this version, and the runner checks the resolved library path.
+- Graphviz (`dot` on `PATH`) for rendered reports. Use `-SkipRender` to generate
+  analysis data without Graphviz.
+
+Check availability:
+
+```powershell
+node --version
+codeql version
+dot -V
+```
+
+Analyze `src` and generate the report:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1
+```
+
+Open **`codeql-graph/provenance/extended-state.html`** in a browser. The offline
+explorer lets you search Effects and dependencies, select sources, inspect
+ordered paths and transition evidence, and view the graph with zoom controls.
+Its export menu links to JSON, SVG, and PNG files.
+
+The runner performs:
+
+```text
+source -> fresh CodeQL database -> inventory and comparison queries
+       -> decoded BQRS -> provenance JSON -> DOT -> SVG / PNG / HTML
+```
+
+Each run creates a new database at `codeql-db/provenance-<guid>` and checks
+source hashes before accepting results. Extraction uses `--build-mode=none`;
+it does not execute the application or run an application build. Reusing the
+output directory replaces generated reports there.
+
+### Analysis modes
+
+The pipeline runs all modes below; it renders `extended-state` by default.
+
+| Mode | Purpose |
+| --- | --- |
+| `baseline` / `baseline-units` | Original syntactic query and normalized comparison units |
+| `standard-value` | Standard CodeQL value-preserving flow |
+| `standard-taint` | Standard flow including supported transformations |
+| `extended` | Taint flow plus callback identity and call-context validation; stops at state slots and unknown calls |
+| `extended-state` | Extended analysis including possible initial and setter values, with distinct transition types |
+
+An inventory query also retains Effects with empty, absent, or unsupported
+dependency arrays. React Effects are recognized by import origin, including
+aliases and namespace/default imports.
+
+### Output files
+
+Outputs live under `codeql-graph/provenance/` by default:
+
+| File | Contents |
+| --- | --- |
+| `<query>.bqrs`, `<query>.raw.json` | CodeQL results and decoded tables |
+| `<mode>.json` | Schema 2.0.0 exports for the four flow modes: Effects, dependency positions, entities, typed edges, contextual paths, boundaries, diagnostics, and search completeness |
+| `extended-state.dot`, `.svg`, `.png`, `.html` | Graph source, images, and offline explorer |
+| `limits.json` | Export traversal budgets |
+| `run.json` | Tool versions, source hashes, database location, limits, and stage timings |
+
+Database directories and the default provenance output directories are ignored
+by Git. Output coordinates are relative to the selected source root.
+
+### Other inputs and rendering
+
+Analyze another source directory with a separate output directory:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1 `
+  -SourceDirectory path/to/source `
+  -OutputDirectory codeql-graph/my-analysis
+```
+
+Output must be outside the source directory. Choose a common source root when
+analyzing multiple packages; imports outside that root may remain boundaries.
+`-DatabaseDirectory` must point to a new location. Optional runner flags include
+`-SkipRender`, `-Threads`, `-Ram`, `-MaxDepth`, `-MaxContexts`, `-MaxPaths`, and
+`-MaxSteps`. Defaults and budget semantics are in the
+[analyzer guide](analysis/README.md#scope-and-limits).
+
+Regenerate visual formats from existing JSON without rerunning CodeQL:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File analysis/render.ps1 `
+  -JsonPath codeql-graph/provenance/extended-state.json
+```
+
+Use the same command with another flow mode's JSON to render that mode.
+Customize the provenance viewer in `analysis/viewer-template.html`.
+
+## Checks
+
+Targeted checks available without an application build or ESLint:
+
+```powershell
+npm run typecheck:analysis
+npm run typecheck:app
+npm run test:analysis
+```
+
+The tests cover export/path composition, traversal budgets, stable identities,
+and the independent path oracle. They do not require a CodeQL extraction.
+After generating application results, run the application-specific assertions:
+
+```powershell
+node analysis/app-check.ts codeql-graph/provenance
+```
+
+For a fresh fixture analysis with handwritten positive/negative source and
+path expectations:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1 `
+  -SourceDirectory analysis/fixtures `
+  -OutputDirectory codeql-graph/provenance-fixtures `
+  -Expectations analysis/fixtures/expected.json
+```
+
+This also writes `comparison.json`. Fixture assertion failures in
+`extended-state` cause a nonzero exit status. See the
+[checks and comparison guide](analysis/README.md#checks-and-comparison) for
+what is scored and how path assertions work.
+
+## Interpretation and limits
+
+- Provenance describes possible static flow, not observed execution or the
+  order of renders, Effects, timers, promises, or state updates.
+- Extended exports follow `source -> value -> dependency -> Effect`. Closure
+  captures and declared Hook dependencies are separate, non-composable
+  annotations; reading a captured value does not prove a function identity changes.
+- The rendered graph combines paths. Inspect the JSON paths and their call
+  contexts before inferring a route through that combined graph.
+- Unknown calls, missing imports/bodies, dynamic properties, mutable aliases,
+  ref mutation, and recursion can limit precision. Setter associations passed
+  through returned tuples or JSX callbacks may remain interface boundaries.
+- Empty or unsupported dependency arrays retain their Effect inventory entries;
+  spread, holey, and non-literal arrays receive no invented dependency positions.
+- Traversal has depth, context, path, and step budgets. Consult `searches`,
+  `diagnostics`, and `truncated` in JSON when assessing completeness. Reaching
+  the path quota alone does not imply truncation.
+
+## Original CSV dependency graph
+
+[`example.ql`](codeql-queries/codeql-custom-queries-javascript/example.ql)
+and its identical `baseline.ql` copy preserve the original analysis. It follows
+variables referenced in literal dependency arrays and their assigned expressions:
 
 ```text
 useEffect -> request -> makeRequest
                      -> userId
 ```
 
-The query is located at
-`codeql-queries/codeql-custom-queries-javascript/example.ql`.
+Unlike the provenance analyzer, this query matches the callee name `useEffect`
+without verifying its React import. It does not model reaching definitions or
+matched calls. The styled renderer shows solid dependency/source edges, dotted
+Effect Event invocation edges, and dashed callback capture edges.
 
-## Callback examples in the dashboard
-
-- `ActivityFeed` uses `useEffectEvent` for its automatic refresh timer. Each tick
-  reads the latest loading state so it skips an overlapping fetch, and records
-  the filter active when that refresh was requested. Changing the filter or
-  loading state does not restart the timer.
-- `SettingsPanel` uses the local `useStableCallback` hook for closing settings
-  by button or Escape. The key listener remains attached while the callback
-  reads the latest open state. The hook keeps one function identity and updates
-  its callback ref in a layout effect after each callback change.
-
-In the styled graph, a solid line from an effect is a dependency or source
-relationship. A dotted line means the effect invokes an Effect Event. A dashed
-line from either callback hook shows a captured value read by its callback;
-those values do not become effect dependencies just because the callback reads
-them. `useEffectEvent` is called only from the timer effect and is omitted from
-its dependency list.
-
-## Prerequisites
-
-- PowerShell
-- The CodeQL CLI available as `codeql`
-- Graphviz available as `dot`
-- Project dependencies installed if you also want to run the React example
-
-Check the command-line tools with:
+To regenerate the legacy graph, use a new database path (change `legacy-db` if
+it already exists):
 
 ```powershell
-codeql version
-dot -V
-```
-
-## Generate the graph
-
-Graph generation has four distinct stages:
-
-```text
-source code -> CodeQL database -> BQRS results -> DOT -> HTML/SVG/PNG
-```
-
-Run all commands below from the repository root. Databases belong under
-`codeql-db/` (ignored by Git); graph data and rendered outputs belong under
-`codeql-graph/`.
-
-### 1. Create a current CodeQL database
-
-A CodeQL database is a snapshot. Running the query again does **not** import
-source edits into an existing database. Recreate the database after changing
-the application:
-
-```powershell
-codeql database create codeql-db\current-db `
+codeql database create codeql-db/legacy-db `
   --language=javascript-typescript `
-  --source-root=. `
-  --overwrite
-```
+  --source-root=src `
+  --build-mode=none
 
-`--overwrite` replaces only the generated database at
-`codeql-db/current-db`. For JavaScript/TypeScript, CodeQL runs its extractor;
-this does not run the project's `npm run build` command.
-
-### 2. Run the query
-
-```powershell
 codeql query run `
-  codeql-queries\codeql-custom-queries-javascript\example.ql `
-  --database=codeql-db\current-db `
-  --output=codeql-graph\use-effects.bqrs
-```
+  codeql-queries/codeql-custom-queries-javascript/example.ql `
+  --database=codeql-db/legacy-db `
+  --output=codeql-graph/use-effects.bqrs
 
-You can inspect the number of graph edges with:
-
-```powershell
-codeql bqrs info codeql-graph\use-effects.bqrs
-```
-
-The `#select` result-set row count is the number of graph edges.
-
-### 3. Decode BQRS edges to CSV
-
-First decode the selected edges with all entity information:
-
-```powershell
-codeql bqrs decode codeql-graph\use-effects.bqrs `
+codeql bqrs decode codeql-graph/use-effects.bqrs `
   --result-set='#select' `
   --format=csv `
   --entities=all `
   --no-titles `
-  --output=codeql-graph\edges.csv
+  --output=codeql-graph/edges.csv
+
+powershell -NoProfile -ExecutionPolicy Bypass -File codeql-graph/render-graph.ps1
 ```
 
-### 4. Choose a generation option
+Open `codeql-graph/use-effects.html`. The renderer also writes DOT, SVG, and PNG;
+its template is `codeql-graph/viewer-template.html`. These legacy files are
+separate from the provenance reports.
 
-Both options use the same `edges.csv` from step 3 and preserve the same nodes
-and connections. Choose either option after decoding the query results.
+## Troubleshooting stale results and database locks
 
-| Option | Appearance | Generation |
-| --- | --- | --- |
-| Classic (original) | Ungrouped graph with basic node colors and no callback edge styles | PowerShell commands below and Graphviz |
-| Styled (recommended) | Source-file groups, distinct callback paths, legend, counts, zoom controls, export links | `render-graph.ps1` and `viewer-template.html` |
+A CodeQL database is a source snapshot. Recreate it after source edits;
+rerunning a query against an old database does not import those edits. The
+provenance runner creates a fresh database automatically. Rerendering JSON or
+DOT only changes the presentation of existing results.
 
-Both options write `codeql-graph/use-effects.dot`, `.svg`, `.png`, and `.html`.
-Running either option replaces those rendered files with the selected design.
-You can switch designs by running the other option without rerunning CodeQL.
-
-#### Option A: Classic (original)
-
-Then create the labeled DOT graph:
-
-```powershell
-$rows = Import-Csv codeql-graph\edges.csv `
-  -Header parentId,parentLabel,parentUrl,childId,childLabel,childUrl
-
-$nodes = @{}
-foreach ($row in $rows) {
-  $nodes[$row.parentId] = @($row.parentLabel, $row.parentUrl)
-  $nodes[$row.childId] = @($row.childLabel, $row.childUrl)
-}
-
-$dotLines = [System.Collections.Generic.List[string]]::new()
-$dotLines.Add('digraph UseEffects {')
-$dotLines.Add('  graph [rankdir=LR, bgcolor="#fafafa", pad="0.3", nodesep="0.5", ranksep="0.8"];')
-$dotLines.Add('  node [shape=box, style="rounded,filled", fillcolor="#e8f0fe", color="#5f6f89", fontname="Segoe UI"];')
-$dotLines.Add('  edge [color="#708090", arrowsize="0.8"];')
-
-foreach ($entry in $nodes.GetEnumerator()) {
-  $rawLabel = [string]$entry.Value[0]
-  $url = [string]$entry.Value[1]
-  $location = ($url -split '/')[-1]
-  $parts = $location -split ':'
-  $fileName = $parts[0]
-  $line = $parts[1]
-
-  $sourcePath = ([uri]($url -replace ':\d+:\d+:\d+:\d+$', '')).LocalPath
-  $sourceLine = (Get-Content -LiteralPath $sourcePath)[([int]$parts[1]) - 1]
-  $callText = $sourceLine.Substring(([int]$parts[2]) - 1)
-
-  if ($callText -match '^useEffect\s*\(') {
-    $label = 'useEffect'
-    $fill = '#fce8b2'
-  } elseif ($callText -match '^useEffectEvent\s*\(') {
-    $label = 'useEffectEvent'
-    $fill = '#fff3df'
-  } elseif ($callText -match '^useStableCallback\s*\(') {
-    $label = 'useStableCallback'
-    $fill = '#e6f7f2'
-  } else {
-    $label = $rawLabel.Replace('"', '\"')
-    $fill = '#e8f0fe'
-  }
-
-  $dotLines.Add((
-    '  "{0}" [label="{1}\n{2}:{3}", fillcolor="{4}", URL="{5}"];' -f
-      $entry.Key, $label, $fileName, $line, $fill, $url
-  ))
-}
-
-foreach ($row in $rows) {
-  $dotLines.Add(('  "{0}" -> "{1}";' -f $row.parentId, $row.childId))
-}
-
-$dotLines.Add('}')
-$dotLines | Set-Content -Encoding ascii codeql-graph\use-effects.dot
-```
-
-ASCII output is intentional. Windows PowerShell's UTF-8 encoding can add a byte
-order mark that some Graphviz versions reject with a syntax error near
-`digraph`.
-
-#### Render the classic visual formats
-
-SVG:
-
-```powershell
-dot -Tsvg codeql-graph\use-effects.dot -o codeql-graph\use-effects.svg
-```
-
-PNG:
-
-```powershell
-dot -Tpng codeql-graph\use-effects.dot -o codeql-graph\use-effects.png
-```
-
-Standalone HTML with inline SVG:
-
-```powershell
-dot -Tsvg_inline codeql-graph\use-effects.dot `
-  -o codeql-graph\use-effects-inline.svg
-
-$svg = Get-Content -Raw codeql-graph\use-effects-inline.svg
-$html = '<!doctype html><html><head><meta charset="utf-8"><title>useEffect dependency graph</title><style>html,body{margin:0;min-height:100%;background:#fafafa}body{display:grid;place-items:center;padding:24px;box-sizing:border-box}svg{max-width:100%;height:auto}</style></head><body>' + $svg + '</body></html>'
-$html | Set-Content -Encoding utf8 codeql-graph\use-effects.html
-Remove-Item -LiteralPath codeql-graph\use-effects-inline.svg
-```
-
-Open `codeql-graph/use-effects.html` in a browser.
-
-#### Option B: Styled (new)
-
-Render the grouped graph and all visual formats with:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File codeql-graph\render-graph.ps1
-```
-
-The renderer reads `edges.csv` and produces DOT, SVG, PNG, and standalone HTML.
-Nodes are grouped by source file. Purple cards identify effects, amber cards
-identify Effect Events, teal cards identify stable callbacks or hook references,
-and blue cards identify values. Solid edges show dependencies and source values,
-dotted edges show Effect Event invocations, and dashed edges show callback
-captures. Hook calls are classified by their exact source position, so
-`useEffectEvent` is never counted as `useEffect`.
-The HTML viewer includes graph counts, a legend, zoom controls, and export links.
-
-Open `codeql-graph/use-effects.html` in a browser. Customize graph styling in
-`codeql-graph/render-graph.ps1` and the viewer in
-`codeql-graph/viewer-template.html`, then rerun the renderer. The script writes
-DOT as UTF-8 without a byte order mark for Graphviz compatibility.
-
-## Why `dot` alone does not update the graph
-
-This command only renders the DOT file that already exists:
-
-```powershell
-dot -Tsvg codeql-graph\use-effects.dot -o codeql-graph\use-effects.svg
-```
-
-It does not read the application, the CodeQL database, or the BQRS file. If only
-the BQRS timestamp changed, `use-effects.dot` is still stale until stages 3 and 4 are
-run.
-
-Likewise, `codeql query run` reads a database snapshot. It does not detect source
-changes made after that database was created.
-
-## VS Code database lock
-
-The CodeQL VS Code extension can keep the selected database cache locked. A CLI
-query against that same database may then fail with a message similar to:
-
-```text
-Error initializing the IMB disk cache: the cache directory is already locked
-```
-
-Remove or deselect the database in the CodeQL sidebar, close the relevant VS Code
-window, or use a separate database path such as `codeql-db/current-db`. Do not
-delete the `.lock` file while a CodeQL query server is active.
-
-## Current output files
-
-The generation process creates:
-
-- `use-effects.bqrs`: raw CodeQL query results
-- `edges.csv`: decoded parent/child entities
-- `use-effects.dot`: Graphviz graph source
-- `use-effects.html`: browser-ready graph
-- `use-effects.svg`: scalable image
-- `use-effects.png`: raster preview
-
-## Query scope and limitations
-
-- Only calls whose callee name is `useEffect` and whose second argument is an
-  array literal are included as effect roots.
-- Callback paths cover local variables assigned directly from `useEffectEvent`
-  or `useStableCallback`. Effect Events must be called inside a detected effect;
-  stable callbacks must be reachable from an effect dependency.
-- Callback capture edges exclude variables declared inside the callback. They
-  are separate from the recursive effect dependency traversal.
-- Entries such as `[object.property]` and `[a + b]` include every variable
-  reference found inside the entry expression.
-- Source traversal is transitive through assigned expressions. Nested calls,
-  object and array literals, templates, and function expressions are searched.
-- The analysis is syntactic and conservative. A variable with multiple assigned
-  expressions can introduce multiple branches.
-- Traversal can stop at parameters, imports, globals, or variables without a
-  source expression available in the database.
-- A locally defined function used as a callee can appear as a source node because
-  it is referenced by the assigned expression.
-- `getCalleeName() = "useEffect"` can also match a non-React function with that
-  name. The query currently does not verify that the function was imported from
-  React.
-- Effects with no dependency array, a non-literal dependency array, or an empty
-  array do not produce useful graph edges.
-
-## CodeQL's built-in DOT interpreter
-
-CodeQL supports interpreting `@kind graph` BQRS results directly as DOT.
-However, with the current query and CLI setup, the auxiliary `nodes` result set
-is empty even though `#select` contains the correct edges. The built-in
-interpreter therefore produces an empty graph:
-
-```text
-digraph {
-  compound=true;
-}
-```
-
-The CSV-to-DOT step above deliberately uses the valid `#select` edges and their
-entity labels instead.
-
-## Run the example application
-
-```powershell
-npm run dev
-```
-
-The application is a React and TypeScript example built with Vite.
+If CodeQL reports that the IMB disk cache is locked, deselect the database in
+the VS Code CodeQL sidebar, close the relevant VS Code window, or use a separate
+new database path. Do not delete a lock file while a query server is active.
