@@ -100,14 +100,17 @@ export function baselineDot(
     const file = location[1].split('/').at(-1)!
     const sourcePath = fileURLToPath(location[1])
 
-    if (!sources.has(sourcePath)) {
-      sources.set(sourcePath, readSource(sourcePath).split(/\r?\n/))
+    let sourceLines = sources.get(sourcePath)
+
+    if (!sourceLines) {
+      sourceLines = readSource(sourcePath).split(/\r?\n/)
+      sources.set(sourcePath, sourceLines)
     }
 
     const line = Number(location[2])
-    const callText = sources
-      .get(sourcePath)!
-      [line - 1].slice(Number(location[3]) - 1)
+    const column = Number(location[3])
+    const callText = sourceLines[line - 1].slice(column - 1)
+
     let kind = 'dependency',
       label = node.label
 

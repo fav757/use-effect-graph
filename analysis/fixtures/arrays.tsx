@@ -5,6 +5,6 @@ export function Arrays(deps: string[]) {
   useEffect(() => {})
   useEffect(() => {}, deps)
   useEffect(() => {}, [...deps])
+  // eslint-disable-next-line no-sparse-arrays
   useEffect(() => {}, [,])
 }
-
