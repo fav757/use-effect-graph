@@ -55,8 +55,9 @@ export function parseRunOptions(arguments_: string[]) {
           : key === 'MaxSteps'
             ? 100000000
             : 1000000
-    if (!Number.isInteger(value) || value < minimum || value > maximum)
+    if (!Number.isInteger(value) || value < minimum || value > maximum) {
       throw new Error(`Invalid ${key}: ${parsed[key]}`)
+    }
     numbers[key] = value
   }
   return {
@@ -88,13 +89,14 @@ export function sourceHashes(source: string): Record<string, string> {
   const visit = (directory: string) => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = join(directory, entry.name)
-      if (entry.isDirectory() && entry.name.toLowerCase() !== 'node_modules')
+      if (entry.isDirectory() && entry.name.toLowerCase() !== 'node_modules') {
         visit(path)
-      else if (
+      } else if (
         entry.isFile() &&
         ['.ts', '.tsx', '.js', '.jsx'].includes(extname(path).toLowerCase())
-      )
+      ) {
         files.push(path)
+      }
     }
   }
   visit(source)
@@ -111,11 +113,14 @@ export function assertSourceUnchanged(
   before: Record<string, string>,
   after: Record<string, string>,
 ) {
-  if (Object.keys(before).length !== Object.keys(after).length)
+  if (Object.keys(before).length !== Object.keys(after).length) {
     throw new Error('Source files were added or removed during analysis.')
-  for (const key of Object.keys(before))
-    if (after[key] !== before[key])
+  }
+  for (const key of Object.keys(before)) {
+    if (after[key] !== before[key]) {
       throw new Error(`Source changed during analysis: ${key}`)
+    }
+  }
 }
 function contained(source: string, output: string) {
   const path = relative(source, output)
@@ -125,32 +130,36 @@ function contained(source: string, output: string) {
   )
 }
 export function runAnalysis(arguments_: string[], execute: Command = command) {
-  if (Number(process.versions.node.split('.')[0]) < 24)
+  if (Number(process.versions.node.split('.')[0]) < 24) {
     throw new Error(
       'Node.js 24 or newer is required for native TypeScript execution.',
     )
+  }
   const config = parseRunOptions(arguments_)
   const source = realpathSync(config.source)
   // Resolve existing ancestors too, so junctions cannot put generated files in the source tree.
   let ancestor = config.output
   while (!existsSync(ancestor)) {
     const parent = dirname(ancestor)
-    if (parent === ancestor)
+    if (parent === ancestor) {
       throw new Error(`Output filesystem root does not exist: ${ancestor}`)
+    }
     ancestor = parent
   }
   const output = resolve(
     realpathSync(ancestor),
     relative(ancestor, config.output),
   )
-  if (existsSync(config.database))
+  if (existsSync(config.database)) {
     throw new Error(
       `Choose a new database directory; it already exists: ${config.database}`,
     )
-  if (contained(source, output))
+  }
+  if (contained(source, output)) {
     throw new Error(
       'OutputDirectory must be outside SourceDirectory to keep extraction reproducible.',
     )
+  }
   mkdirSync(output, { recursive: true })
   const timings: { stage: string; seconds: number }[] = []
   const stage = (name: string, action: () => unknown) => {
@@ -173,10 +182,11 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
     ['resolve', 'library-path', `--query=${join(queries, 'extended.ql')}`],
     true,
   )
-  if (!/javascript-all[\\/]2\.10\.0/.test(libraryPath))
+  if (!/javascript-all[\\/]2\.10\.0/.test(libraryPath)) {
     throw new Error(
       'Install the CodeQL bundle containing codeql/javascript-all 2.10.0.',
     )
+  }
   const hashes = sourceHashes(source)
   const resources = [`--threads=${config.Threads}`, `--ram=${config.Ram}`]
   stage('database', () =>
@@ -248,11 +258,12 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
     )
   }
   assertSourceUnchanged(hashes, sourceHashes(source))
-  if (!config.skipRender)
+  if (!config.skipRender) {
     stage('graphviz', () =>
       renderReport(join(output, 'extended-state.json'), execute),
     )
-  if (config.expectations)
+  }
+  if (config.expectations) {
     stage('compare', () =>
       execute(process.execPath, [
         join(repository, 'analysis/check.ts'),
@@ -261,6 +272,7 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
         source,
       ]),
     )
+  }
   writeFileSync(
     join(output, 'run.json'),
     JSON.stringify(

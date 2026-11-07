@@ -11,26 +11,28 @@ export function renderReport(
   htmlOnly = false,
   dotOnly = false,
 ) {
-  if (!jsonPath.endsWith('.json'))
+  if (!jsonPath.endsWith('.json')) {
     throw new Error('Expected a .json result path')
+  }
   if (!htmlOnly) {
     writeFileSync(
       jsonPath.replace(/\.json$/, '.dot'),
       toDot(readResult(jsonPath)),
     )
     if (dotOnly) return
-    for (const format of ['svg', 'png'])
+    for (const format of ['svg', 'png']) {
       execute('dot', [
         `-T${format}`,
         jsonPath.replace(/\.json$/, '.dot'),
         '-o',
         jsonPath.replace(/\.json$/, `.${format}`),
       ])
+    }
   }
   packageReport(jsonPath)
   console.log(`Graph viewer: ${jsonPath.replace(/\.json$/, '.html')}`)
 }
-if (isMain(import.meta.url))
+if (isMain(import.meta.url)) {
   main(() => {
     const arguments_ = process.argv.slice(2)
     const positional =
@@ -39,10 +41,11 @@ if (isMain(import.meta.url))
         : undefined
     const parsed = options(arguments_, ['JsonPath'], ['html', 'dot-only'])
     const path = positional ?? parsed.JsonPath
-    if (typeof path !== 'string')
+    if (typeof path !== 'string') {
       throw new Error(
         'Usage: node analysis/render.ts result.json (or -JsonPath result.json) [--html | --dot-only]',
       )
+    }
     renderReport(
       resolve(path),
       command,
@@ -50,3 +53,4 @@ if (isMain(import.meta.url))
       parsed['dot-only'] === true,
     )
   })
+}

@@ -64,8 +64,9 @@ test('runner preserves defaults, legacy options, aliases and numeric bounds', ()
     ['--max-depth', '1.2'],
     ['--unknown'],
     ['-SourceDirectory'],
-  ])
+  ]) {
     assert.throws(() => parseRunOptions(args))
+  }
 })
 test('runner passes exact analysis stages and resource arguments without PowerShell', () =>
   workspace((directory) => {
@@ -114,10 +115,11 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
     )
     for (const call of calls.filter((call) =>
       ['query', 'database'].includes(call.args[0]),
-    ))
+    )) {
       assert(
         call.args.includes('--threads=3') && call.args.includes('--ram=4096'),
       )
+    }
     assert(calls.every((call) => !/powershell|pwsh/i.test(call.executable)))
     const manifest = JSON.parse(readFileSync(join(output, 'run.json'), 'utf8'))
     assert.equal(manifest.stages.length, 19)

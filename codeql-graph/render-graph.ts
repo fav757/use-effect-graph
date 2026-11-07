@@ -18,7 +18,9 @@ export function parseCsv(text: string): string[][] {
       if (quoted && text[index + 1] === '"') {
         field += '"'
         index++
-      } else quoted = !quoted
+      } else {
+        quoted = !quoted
+      }
     } else if (char === ',' && !quoted) {
       row.push(field)
       field = ''
@@ -28,16 +30,20 @@ export function parseCsv(text: string): string[][] {
       rows.push(row)
       row = []
       field = ''
-    } else field += char
+    } else {
+      field += char
+    }
   }
   if (quoted) throw new Error('Unterminated CSV field')
   if (field || row.length) {
     row.push(field)
     rows.push(row)
   }
-  for (const fields of rows)
-    if (fields.length !== 6)
+  for (const fields of rows) {
+    if (fields.length !== 6) {
       throw new Error('Expected six columns in edges.csv')
+    }
+  }
   return rows
 }
 const escapeDot = (value: string) =>
@@ -82,8 +88,9 @@ export function baselineDot(
     if (!location) throw new Error(`Invalid source URL: ${node.url}`)
     const file = location[1].split('/').at(-1)!
     const sourcePath = fileURLToPath(location[1])
-    if (!sources.has(sourcePath))
+    if (!sources.has(sourcePath)) {
       sources.set(sourcePath, readSource(sourcePath).split(/\r?\n/))
+    }
     const line = Number(location[2])
     const callText = sources
       .get(sourcePath)!
@@ -148,13 +155,14 @@ export function baselineDot(
   }
   for (const [parentId, , , childId] of rows) {
     let style = ''
-    if (['event', 'stable'].includes(nodeKinds.get(parentId)!))
+    if (['event', 'stable'].includes(nodeKinds.get(parentId)!)) {
       style = ' [style=dashed, color="#c48336"]'
-    else if (
+    } else if (
       nodeKinds.get(parentId) === 'effect' &&
       nodeKinds.get(childId) === 'event'
-    )
+    ) {
       style = ' [style=dotted, color="#c48336"]'
+    }
     lines.push(`"${parentId}" -> "${childId}"${style};`)
   }
   lines.push('}')
@@ -173,22 +181,24 @@ export function renderBaseline(directory: string, execute: Command = command) {
     parseCsv(readFileSync(join(directory, 'edges.csv'), 'utf8')),
   )
   writeFileSync(join(directory, 'use-effects.dot'), dot.replaceAll('\n', EOL))
-  for (const format of ['svg', 'png'])
+  for (const format of ['svg', 'png']) {
     execute('dot', [
       `-T${format}`,
       join(directory, 'use-effects.dot'),
       '-o',
       join(directory, `use-effects.${format}`),
     ])
+  }
   const svg = readFileSync(join(directory, 'use-effects.svg'), 'utf8')
   const assets = fileURLToPath(
     new URL('../analysis/viewer/dist/', import.meta.url),
   )
-  for (const extension of ['js', 'css'])
+  for (const extension of ['js', 'css']) {
     copyFileSync(
       join(assets, `viewer-baseline.${extension}`),
       join(directory, `viewer-baseline.${extension}`),
     )
+  }
   const serialize = (value: unknown) =>
     JSON.stringify(value).replaceAll('<', '\\u003c')
   writeFileSync(
@@ -203,7 +213,7 @@ export function renderBaseline(directory: string, execute: Command = command) {
     `Rendered ${totals.nodes} nodes and ${totals.connections} edges across ${totals.files} files.`,
   )
 }
-if (isMain(import.meta.url))
+if (isMain(import.meta.url)) {
   main(() => {
     const parsed = options(process.argv.slice(2), ['OutputDirectory'])
     renderBaseline(
@@ -214,3 +224,4 @@ if (isMain(import.meta.url))
       ),
     )
   })
+}

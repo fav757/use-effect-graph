@@ -8,8 +8,9 @@ export function readResult(path: string): Result {
   const result = JSON.parse(
     readFileSync(path, 'utf8').replace(/^\uFEFF/, ''),
   ) as Result
-  if (!['1.0.0', '2.0.0'].includes(result.schemaVersion))
+  if (!['1.0.0', '2.0.0'].includes(result.schemaVersion)) {
     throw new Error('Unsupported result schema: ' + result.schemaVersion)
+  }
   return result
 }
 export function serializeReport(result: unknown, svg: string, stem: string) {
@@ -28,19 +29,23 @@ export function packageReport(
   jsonPath: string,
   assetsDirectory = defaultAssets,
 ) {
-  for (const asset of ['viewer.js', 'viewer.css'])
-    if (!existsSync(join(assetsDirectory, asset)))
+  for (const asset of ['viewer.js', 'viewer.css']) {
+    if (!existsSync(join(assetsDirectory, asset))) {
       throw new Error(
         'Viewer assets are missing. Run npm run build:viewer first.',
       )
+    }
+  }
   const result = readResult(jsonPath)
   const directory = dirname(jsonPath)
   const stem = basename(jsonPath, '.json')
   const svg = readFileSync(join(directory, `${stem}.svg`), 'utf8')
-  if (!svg.includes('<svg'))
+  if (!svg.includes('<svg')) {
     throw new Error('Graphviz output does not contain an SVG root.')
-  for (const asset of ['viewer.js', 'viewer.css'])
+  }
+  for (const asset of ['viewer.js', 'viewer.css']) {
     copyFileSync(join(assetsDirectory, asset), join(directory, asset))
+  }
   writeFileSync(
     join(directory, `${stem}.data.js`),
     serializeReport(result, svg, stem),

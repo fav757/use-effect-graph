@@ -15,10 +15,10 @@ test('path identity preserves transition kinds and evidence', () => {
     ])
     const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
     assert.equal(
-      result.paths.filter((p) => p.dependencyId.endsWith(':0')).length,
+      result.paths.filter((path) => path.dependencyId.endsWith(':0')).length,
       2,
     )
-    assert.equal(new Set(result.paths.map((p) => p.id)).size, 4)
+    assert.equal(new Set(result.paths.map((path) => path.id)).size, 4)
   }
 })
 
@@ -37,7 +37,7 @@ test('path identity preserves meaningful contexts and merges equivalent aliases'
     flow['#select'].tuples.push(['effect', 0, { id: 11 }, { id: 4 }])
     const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
     assert.equal(
-      result.paths.filter((p) => p.dependencyId.endsWith(':0')).length,
+      result.paths.filter((path) => path.dependencyId.endsWith(':0')).length,
       distinct ? 2 : 1,
     )
   }
@@ -50,7 +50,11 @@ test('unique path count below or exactly at the limit is complete', () => {
       maxPaths,
     })
     assert.equal(result.truncated, false)
-    assert(!result.diagnostics.some((d) => d.reason === 'path-limit'))
+    assert(
+      !result.diagnostics.some(
+        (dependency) => dependency.reason === 'path-limit',
+      ),
+    )
     assert.equal(result.paths.length, 2)
     assert(
       result.searches.every(
@@ -127,8 +131,8 @@ test('unfinished lookahead reports the actual step, depth or context budget', ()
     )
     assert(
       result.diagnostics.some(
-        (d) =>
-          d.reason ===
+        (dependency) =>
+          dependency.reason ===
           {
             maxSteps: 'step-limit',
             maxDepth: 'depth-limit',
@@ -136,7 +140,11 @@ test('unfinished lookahead reports the actual step, depth or context budget', ()
           }[budget],
       ),
     )
-    assert(!result.diagnostics.some((d) => d.reason === 'path-limit'))
+    assert(
+      !result.diagnostics.some(
+        (dependency) => dependency.reason === 'path-limit',
+      ),
+    )
     assert.equal(result.truncated, true)
   }
 })
@@ -218,8 +226,14 @@ test('lookahead stops at the first additional unique path', () => {
   assert.equal(result.paths.length, 1)
   assert(result.searches[0].additionalPathFound && !result.searches[0].complete)
   assert(result.searches[0].steps < 10)
-  assert(result.diagnostics.some((d) => d.reason === 'path-limit'))
-  assert(!result.diagnostics.some((d) => d.reason === 'step-limit'))
+  assert(
+    result.diagnostics.some((dependency) => dependency.reason === 'path-limit'),
+  )
+  assert(
+    !result.diagnostics.some(
+      (dependency) => dependency.reason === 'step-limit',
+    ),
+  )
 })
 
 test('annotation closure is independent of input row order', () => {
@@ -350,23 +364,32 @@ test('retains effects with no edges and distinct dependency positions', () => {
   const { inventory, flow } = data()
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
   assert.equal(result.effects.length, 2)
-  assert.equal(new Set(result.dependencies.map((d) => d.id)).size, 2)
+  assert.equal(
+    new Set(result.dependencies.map((dependency) => dependency.id)).size,
+    2,
+  )
   assert.equal(result.paths.length, 2)
-  const annotation = result.edges.find((e) => e.type === 'closure-capture')!
+  const annotation = result.edges.find(
+    (edge) => edge.type === 'closure-capture',
+  )!
   assert.equal(annotation.composable, false)
-  assert(result.paths.every((p) => !p.edges.includes(annotation.id)))
+  assert(result.paths.every((path) => !path.edges.includes(annotation.id)))
   assert(toDot(result).includes('useEffect (empty)'))
 })
 test('reports cycle and depth limits while terminating', () => {
   const { inventory, flow } = data()
   flow.pathEdges.tuples.push([{ id: 2 }, { id: 1 }, 'value-flow', ''])
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
-  assert(result.diagnostics.some((d) => d.reason === 'cycle'))
+  assert(result.diagnostics.some((dependency) => dependency.reason === 'cycle'))
   const shallow = exportResult(inventory, flow, sourceRoot, 'extended-state', {
     maxDepth: 1,
   })
   assert.equal(shallow.truncated, true)
-  assert(shallow.diagnostics.some((d) => d.reason === 'depth-limit'))
+  assert(
+    shallow.diagnostics.some(
+      (dependency) => dependency.reason === 'depth-limit',
+    ),
+  )
 })
 test('reports path and exploration limits', () => {
   const { inventory, flow } = data()
@@ -377,7 +400,9 @@ test('reports path and exploration limits', () => {
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state', {
     maxPaths: 1,
   })
-  assert(result.diagnostics.some((d) => d.reason === 'path-limit'))
+  assert(
+    result.diagnostics.some((dependency) => dependency.reason === 'path-limit'),
+  )
   const tiny = exportResult(inventory, flow, sourceRoot, 'extended-state', {
     maxSteps: 1,
   })
@@ -392,14 +417,18 @@ test('expands only matched CodeQL call subpaths and bounds contexts', () => {
   flow.subpaths = table([[{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]])
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
   assert.deepEqual(result.paths[0].nodes, ['a', 'b', 'c', 'dep'])
-  assert(result.edges.some((e) => e.type === 'call-argument'))
-  assert(result.edges.some((e) => e.type === 'call-return'))
+  assert(result.edges.some((edge) => edge.type === 'call-argument'))
+  assert(result.edges.some((edge) => edge.type === 'call-return'))
   flow.subpaths.tuples.push([{ id: 2 }, { id: 3 }, { id: 3 }, { id: 3 }])
   flow.pathEdges.tuples.push([{ id: 2 }, { id: 3 }, 'call-return', ''])
   const limited = exportResult(inventory, flow, sourceRoot, 'extended-state', {
     maxContexts: 1,
   })
-  assert(limited.diagnostics.some((d) => d.reason === 'context-limit'))
+  assert(
+    limited.diagnostics.some(
+      (dependency) => dependency.reason === 'context-limit',
+    ),
+  )
 })
 test('output is independent of CodeQL entity numbers and row order', () => {
   const { inventory, flow } = data()
@@ -407,11 +436,12 @@ test('output is independent of CodeQL entity numbers and row order', () => {
   const changed = JSON.parse(
     JSON.stringify(flow).replace(
       /"id":(\d+)/g,
-      (_, n) => '"id":' + (+n + 1000),
+      (_, number) => '"id":' + (+number + 1000),
     ),
   )
-  for (const t of Object.values(changed) as { tuples: unknown[][] }[])
+  for (const t of Object.values(changed) as { tuples: unknown[][] }[]) {
     t.tuples.reverse()
+  }
   assert.deepEqual(
     exportResult(inventory, changed, sourceRoot, 'extended-state'),
     first,
@@ -446,7 +476,9 @@ test('rejects captured-parameter paths that return through another invocation', 
   assert.equal(extended.paths.length, 0)
   assert.equal(extended.filteredPaths.length, 2)
   assert(
-    extended.filteredPaths.every((p) => p.reason === 'mismatched-call-site'),
+    extended.filteredPaths.every(
+      (path) => path.reason === 'mismatched-call-site',
+    ),
   )
   contexts.callArguments = table([['a', 'b', 'dep', 'capturing-function']])
   assert.equal(

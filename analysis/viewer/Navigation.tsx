@@ -26,11 +26,12 @@ export function Navigation({
   onSelect: (effect: Effect) => void
 }) {
   const groups = new Map<string, Effect[]>()
-  for (const effect of visible)
+  for (const effect of visible) {
     groups.set(effect.location.file, [
       ...(groups.get(effect.location.file) ?? []),
       effect,
     ])
+  }
   return (
     <aside className="sidebar" aria-label="Effect navigation">
       <div className="brand">

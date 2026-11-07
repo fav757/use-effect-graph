@@ -32,7 +32,7 @@ export function Graph({
   const zoom = (value: number) =>
     setScale(Math.max(legacy ? 0.25 : 0.04, Math.min(legacy ? 2.5 : 3, value)))
   useEffect(() => {
-    if (visible)
+    if (visible) {
       setScale(
         Math.max(
           legacy ? 0.25 : 0.04,
@@ -42,6 +42,7 @@ export function Graph({
           ),
         ),
       )
+    }
   }, [visible, width, legacy])
   useEffect(() => {
     const svg = canvas.current?.querySelector('svg')
@@ -59,21 +60,25 @@ export function Graph({
     const edgeIds = new Set(paths.flatMap((path) => path.edges))
     if (effect) nodeIds.add(effect.id)
     if (dependency) nodeIds.add(dependency.entityId)
-    for (const edge of data.edges)
+    for (const edge of data.edges) {
       if (
         edge.type === 'effect-dependency' &&
         edge.from === dependency?.entityId &&
         edge.to === effect?.id
-      )
+      ) {
         edgeIds.add(edge.id)
-    for (const node of canvas.current?.querySelectorAll('.node') ?? [])
+      }
+    }
+    for (const node of canvas.current?.querySelectorAll('.node') ?? []) {
       node.classList.toggle(
         'dimmed',
         highlight &&
           !nodeIds.has(node.querySelector('title')?.textContent ?? ''),
       )
-    for (const edge of canvas.current?.querySelectorAll('.edge') ?? [])
+    }
+    for (const edge of canvas.current?.querySelectorAll('.edge') ?? []) {
       edge.classList.toggle('dimmed', highlight && !edgeIds.has(edge.id))
+    }
   }, [data, effect, dependency, sourceId, highlight, svgMarkup])
   const controls = (
     <>

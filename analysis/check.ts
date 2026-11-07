@@ -16,10 +16,11 @@ type Expectation = {
   }[]
 }
 const [directory, expectedPath, sourceRoot] = process.argv.slice(2)
-if (!expectedPath)
+if (!expectedPath) {
   throw new Error(
     'Usage: node analysis/check.ts output-directory expected.json',
   )
+}
 const expectedFile = JSON.parse(readFileSync(expectedPath, 'utf8')) as Record<
   string,
   unknown
@@ -28,8 +29,9 @@ const expected = Object.fromEntries(
   Object.entries(expectedFile).filter(([key]) => key !== '$paths'),
 ) as Record<string, Expectation>
 const pathReference = expectedFile.$paths
-if (pathReference !== undefined && typeof pathReference !== 'string')
+if (pathReference !== undefined && typeof pathReference !== 'string') {
   throw new Error('$paths must name a path oracle file')
+}
 const pathOracle =
   typeof pathReference === 'string'
     ? (JSON.parse(
@@ -43,14 +45,16 @@ const load = <T>(name: string): T =>
 
 type Link = { dependency: string; expression: string; source: string }
 function assess(result: Result) {
-  const entities = new Map(result.entities.map((e) => [e.id, e]))
+  const entities = new Map(result.entities.map((entity) => [entity.id, entity]))
   const missing: Link[] = []
   const extra: Link[] = []
   const found: Link[] = []
   const inventoryErrors: string[] = []
   for (const [file, spec] of Object.entries(expected)) {
-    const effects = result.effects.filter((e) => e.location.file === file)
-    if (effects.length !== spec.effectCount)
+    const effects = result.effects.filter(
+      (effect) => effect.location.file === file,
+    )
+    if (effects.length !== spec.effectCount) {
       inventoryErrors.push(
         file +
           ': expected ' +
@@ -58,18 +62,20 @@ function assess(result: Result) {
           ' effects, got ' +
           effects.length,
       )
+    }
     for (const [mode, count] of Object.entries(spec.modes ?? {})) {
-      if (effects.filter((e) => e.mode === mode).length !== count)
+      if (effects.filter((effect) => effect.mode === mode).length !== count) {
         inventoryErrors.push(
           file + ': expected ' + count + ' effects in mode ' + mode,
         )
+      }
     }
     for (const depSpec of spec.dependencies) {
       const deps = result.dependencies.filter(
-        (d) =>
-          entities.get(d.entityId)?.location.file === file &&
-          d.expression === depSpec.expression &&
-          (depSpec.index === undefined || depSpec.index === d.index),
+        (dependency) =>
+          entities.get(dependency.entityId)?.location.file === file &&
+          dependency.expression === depSpec.expression &&
+          (depSpec.index === undefined || depSpec.index === dependency.index),
       )
       if (deps.length === 0) {
         inventoryErrors.push(
@@ -80,8 +86,8 @@ function assess(result: Result) {
       for (const dep of deps) {
         const sources = new Set(
           result.paths
-            .filter((p) => p.dependencyId === dep.id)
-            .map((p) => entities.get(p.source)?.expression),
+            .filter((path) => path.dependencyId === dep.id)
+            .map((path) => entities.get(path.source)?.expression),
         )
         for (const source of depSpec.include ?? []) {
           const link = {
@@ -91,13 +97,15 @@ function assess(result: Result) {
           }
           ;(sources.has(source) ? found : missing).push(link)
         }
-        for (const source of depSpec.exclude ?? [])
-          if (sources.has(source))
+        for (const source of depSpec.exclude ?? []) {
+          if (sources.has(source)) {
             extra.push({
               dependency: dep.id,
               expression: dep.expression,
               source,
             })
+          }
+        }
       }
     }
   }
@@ -140,7 +148,7 @@ const catalog = load<{ '#select': { tuples: string[][] } }>(
   'inventory.raw.json',
 )['#select'].tuples.map(
   ([id, , kind, label]) =>
-    enhanced.entities.find((e) => e.id === id) ?? {
+    enhanced.entities.find((entity) => entity.id === id) ?? {
       id,
       kind,
       label,
@@ -159,13 +167,13 @@ const projected: Result = {
   entities: catalog,
   paths: enhanced.dependencies.flatMap((dep) =>
     catalog
-      .filter((e) => normalized.has(dep.id + '\u0000' + e.id))
-      .map((e) => ({
+      .filter((entry) => normalized.has(dep.id + '\u0000' + entry.id))
+      .map((entry) => ({
         id: 'baseline-projection',
         dependencyId: dep.id,
-        source: e.id,
+        source: entry.id,
         sourceRole: 'syntactic',
-        nodes: [e.id, dep.entityId],
+        nodes: [entry.id, dep.entityId],
         edges: [],
         contexts: [],
         stopReason: 'syntactic-projection',
@@ -188,7 +196,7 @@ writeFileSync(
   resolve(directory, 'comparison.json'),
   JSON.stringify(output, null, 2) + '\n',
 )
-for (const [mode, score] of Object.entries(report))
+for (const [mode, score] of Object.entries(report)) {
   process.stdout.write(
     mode +
       ': found=' +
@@ -199,6 +207,7 @@ for (const [mode, score] of Object.entries(report))
       score.extra.length +
       '\n',
   )
+}
 const target = report['extended-state']
 if (
   target.missing.length ||
@@ -208,13 +217,14 @@ if (
   !!pathChecks['extended-state']?.errors.length
 ) {
   process.stderr.write(JSON.stringify(target, null, 2) + '\n')
-  if (pathChecks['extended-state']?.errors.length)
+  if (pathChecks['extended-state']?.errors.length) {
     process.stderr.write(
       JSON.stringify(pathChecks['extended-state'], null, 2) + '\n',
     )
+  }
   process.exitCode = 1
 }
-if (pathOracle)
+if (pathOracle) {
   process.stdout.write(
     'Path oracle: ' +
       pathChecks['extended-state'].passed.length +
@@ -222,34 +232,45 @@ if (pathOracle)
       pathChecks['extended-state'].errors.length +
       ' errors\n',
   )
+}
 
 // Exercise actual CodeQL fixture graphs, including negative composition guarantees.
 if (!process.exitCode) {
   const base = load('extended.json') as Result
-  assert(base.paths.some((p) => p.stopReason === 'react-state'))
-  assert(!base.edges.some((e) => e.type.startsWith('state-')))
-  assert(enhanced.edges.some((e) => e.type === 'state-initial'))
-  assert(enhanced.edges.some((e) => e.type === 'state-update'))
-  assert(enhanced.edges.some((e) => e.type === 'state-update-functional'))
-  assert(enhanced.diagnostics.some((d) => d.reason === 'cycle'))
-  assert(enhanced.boundaries.some((b) => b.reason === 'unknown-call'))
+  assert(base.paths.some((path) => path.stopReason === 'react-state'))
+  assert(!base.edges.some((edge) => edge.type.startsWith('state-')))
+  assert(enhanced.edges.some((edge) => edge.type === 'state-initial'))
+  assert(enhanced.edges.some((edge) => edge.type === 'state-update'))
+  assert(enhanced.edges.some((edge) => edge.type === 'state-update-functional'))
   assert(
-    enhanced.filteredPaths.some((p) => p.reason === 'mismatched-call-site'),
+    enhanced.diagnostics.some((dependency) => dependency.reason === 'cycle'),
+  )
+  assert(
+    enhanced.boundaries.some((boundary) => boundary.reason === 'unknown-call'),
+  )
+  assert(
+    enhanced.filteredPaths.some(
+      (path) => path.reason === 'mismatched-call-site',
+    ),
   )
   const callbacks = enhanced.dependencies.filter(
-    (d) => d.expression === 'callback',
+    (dependency) => dependency.expression === 'callback',
   )
   assert(
-    callbacks.every((d) =>
+    callbacks.every((dependency) =>
       enhanced.paths.some(
-        (p) => p.dependencyId === d.id && p.stopReason === 'function-identity',
+        (path) =>
+          path.dependencyId === dependency.id &&
+          path.stopReason === 'function-identity',
       ),
     ),
   )
   assert(
     enhanced.edges
-      .filter((e) => ['closure-capture', 'hook-dependency'].includes(e.type))
-      .every((e) => !e.composable),
+      .filter((entry) =>
+        ['closure-capture', 'hook-dependency'].includes(entry.type),
+      )
+      .every((entry) => !entry.composable),
   )
   const limited = exportResult(
     load('inventory.raw.json'),
@@ -260,7 +281,9 @@ if (!process.exitCode) {
   )
   assert(
     limited.truncated &&
-      limited.diagnostics.some((d) => d.reason === 'depth-limit'),
+      limited.diagnostics.some(
+        (dependency) => dependency.reason === 'depth-limit',
+      ),
   )
   writeFileSync(
     resolve(directory, 'fixture-invariants.json'),

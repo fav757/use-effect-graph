@@ -20,8 +20,9 @@ export const command: Command = (executable, arguments_, capture = false) => {
     stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit',
   })
   if (child.error) throw child.error
-  if (child.status !== 0)
+  if (child.status !== 0) {
     throw new ProcessFailure(child.status ?? 1, executable)
+  }
   return child.stdout ?? ''
 }
 
@@ -40,16 +41,19 @@ export function options(
   for (let index = 0; index < arguments_.length; index++) {
     const [flag, ...inline] = arguments_[index].split('=')
     const name = names.get(normalize(flag))
-    if (!flag.startsWith('-') || !name)
+    if (!flag.startsWith('-') || !name) {
       throw new Error(`Unknown option: ${flag}`)
+    }
     if (switches.includes(name)) {
-      if (inline.length)
+      if (inline.length) {
         throw new Error(`Switch ${flag} does not accept a value`)
+      }
       parsed[name] = true
     } else {
       const value = inline.length ? inline.join('=') : arguments_[++index]
-      if (!value || value.startsWith('-'))
+      if (!value || value.startsWith('-')) {
         throw new Error(`Missing value for ${flag}`)
+      }
       parsed[name] = value
     }
   }

@@ -37,8 +37,9 @@ export function Users({
     void fetchUsers(debouncedQuery, status, controller.signal)
       .then(setUsers)
       .catch((reason: unknown) => {
-        if (reason instanceof DOMException && reason.name === 'AbortError')
+        if (reason instanceof DOMException && reason.name === 'AbortError') {
           return
+        }
         setError('The directory could not be loaded.')
       })
       .finally(() => {

@@ -3,41 +3,46 @@ import { resolve } from 'node:path'
 import assert from 'node:assert/strict'
 import type { Result } from './export.ts'
 const directory = process.argv[2]
-if (!directory)
+if (!directory) {
   throw new Error('Usage: node analysis/app-check.ts output-directory')
+}
 const read = (mode: string) =>
   JSON.parse(readFileSync(resolve(directory, mode + '.json'), 'utf8')) as Result
 const base = read('extended')
 const history = read('extended-state')
-const entities = new Map(history.entities.map((e) => [e.id, e]))
+const entities = new Map(history.entities.map((entity) => [entity.id, entity]))
 const checks: string[] = []
 const effectFile = (id: string) =>
-  history.effects.find((e) => e.id === id)?.location.file ?? ''
+  history.effects.find((effect) => effect.id === id)?.location.file ?? ''
 const pathsFor = (file: string, expression: string) =>
-  history.paths.filter((p) =>
+  history.paths.filter((path) =>
     history.dependencies.some(
-      (d) =>
-        d.id === p.dependencyId &&
-        d.expression === expression &&
-        effectFile(d.effectId).endsWith(file),
+      (dependency) =>
+        dependency.id === path.dependencyId &&
+        dependency.expression === expression &&
+        effectFile(dependency.effectId).endsWith(file),
     ),
   )
 const origins = (file: string, expression: string) =>
-  pathsFor(file, expression).map((p) => entities.get(p.source)?.expression)
+  pathsFor(file, expression).map(
+    (path) => entities.get(path.source)?.expression,
+  )
 assert(
   history.dependencies.some(
-    (d) =>
-      d.expression === 'debouncedQuery' &&
-      effectFile(d.effectId).endsWith('components/Users.tsx'),
+    (dependency) =>
+      dependency.expression === 'debouncedQuery' &&
+      effectFile(dependency.effectId).endsWith('components/Users.tsx'),
   ),
 )
 assert(
   pathsFor('components/Users.tsx', 'debouncedQuery').some(
-    (p) =>
-      p.nodes.some((id) =>
+    (path) =>
+      path.nodes.some((id) =>
         entities.get(id)?.location.file.endsWith('hooks/useDebouncedValue.ts'),
       ) &&
-      p.nodes.some((id) => entities.get(id)?.location.file.endsWith('App.tsx')),
+      path.nodes.some((id) =>
+        entities.get(id)?.location.file.endsWith('App.tsx'),
+      ),
   ),
 )
 checks.push(
@@ -55,25 +60,26 @@ const refresh = origins('components/ActivityFeed.tsx', 'refreshSeconds')
 assert(refresh.includes('10'))
 assert(!refresh.includes("'light'") && !refresh.includes('4'))
 checks.push('refreshSeconds excludes theme and pageSize initial values')
-assert(history.entities.some((e) => e.expression === 'user?.id'))
+assert(history.entities.some((entity) => entity.expression === 'user?.id'))
 checks.push('optional property user?.id is preserved as its own entity')
 assert(
   history.effects.some(
-    (e) =>
-      e.mode === 'empty' &&
-      e.location.file.endsWith('hooks/useOnlineStatus.ts'),
+    (entry) =>
+      entry.mode === 'empty' &&
+      entry.location.file.endsWith('hooks/useOnlineStatus.ts'),
   ),
 )
 checks.push('useOnlineStatus retains its empty-dependency Effect')
-assert(base.paths.some((p) => p.stopReason === 'react-state'))
+assert(base.paths.some((path) => path.stopReason === 'react-state'))
 assert(
   !base.edges.some(
-    (e) =>
-      e.type.startsWith('state-initial') || e.type.startsWith('state-update'),
+    (entry) =>
+      entry.type.startsWith('state-initial') ||
+      entry.type.startsWith('state-update'),
   ),
 )
-assert(history.edges.some((e) => e.type === 'state-initial'))
-assert(history.edges.some((e) => e.type.startsWith('state-update')))
+assert(history.edges.some((edge) => edge.type === 'state-initial'))
+assert(history.edges.some((edge) => edge.type.startsWith('state-update')))
 checks.push(
   'base state boundary and extended possible state history remain separate',
 )

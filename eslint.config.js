@@ -19,6 +19,15 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
+      curly: ['error', 'multi-line', 'consistent'],
+      'id-length': [
+        'error',
+        {
+          min: 2,
+          properties: 'never',
+          exceptions: ['_', 'i', 't', 'x', 'y'],
+        },
+      ],
 
       'react-refresh/only-export-components': [
         'warn',
