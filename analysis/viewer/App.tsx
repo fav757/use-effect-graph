@@ -6,6 +6,7 @@ import { Icon } from './Icon.tsx'
 import { useSelection } from './useSelection.ts'
 import type { ReportAssets, Result } from './types.ts'
 import { modeName } from './utils.ts'
+
 export function App({ data, assets }: { data: Result; assets: ReportAssets }) {
   const [search, setSearch] = useState('')
   const selection = useSelection(data)

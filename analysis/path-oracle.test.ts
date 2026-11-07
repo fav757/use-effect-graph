@@ -78,9 +78,11 @@ for (const mutation of [
     const returning = result.edges.find((edge) => edge.type === 'call-return')!
     if (mutation === 'transition type') returning.type = 'state-update'
     if (mutation === 'evidence coordinates') returning.evidence.startColumn++
+
     if (mutation === 'call context') {
       returning.callContext!.target = 'calls.tsx:3:1:3:24#function'
     }
+
     if (mutation === 'intermediate connection') {
       const path = result.paths[0]
       path.nodes.splice(2, 1)
@@ -88,9 +90,11 @@ for (const mutation of [
       path.edges.splice(1, 1)
       returning.from = 'p'
     }
+
     if (mutation === 'stop reason') {
       result.paths[0].stopReason = 'parameter-interface'
     }
+
     assert.equal(result.paths[0].source, source)
     assert(
       assessPaths(result, oracle).errors.some((error) =>

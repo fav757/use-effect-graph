@@ -16,11 +16,13 @@ type Expectation = {
   }[]
 }
 const [directory, expectedPath, sourceRoot] = process.argv.slice(2)
+
 if (!expectedPath) {
   throw new Error(
     'Usage: node analysis/check.ts output-directory expected.json',
   )
 }
+
 const expectedFile = JSON.parse(readFileSync(expectedPath, 'utf8')) as Record<
   string,
   unknown
@@ -29,9 +31,11 @@ const expected = Object.fromEntries(
   Object.entries(expectedFile).filter(([key]) => key !== '$paths'),
 ) as Record<string, Expectation>
 const pathReference = expectedFile.$paths
+
 if (pathReference !== undefined && typeof pathReference !== 'string') {
   throw new Error('$paths must name a path oracle file')
 }
+
 const pathOracle =
   typeof pathReference === 'string'
     ? (JSON.parse(
@@ -44,16 +48,19 @@ const load = <T>(name: string): T =>
   ) as T
 
 type Link = { dependency: string; expression: string; source: string }
+
 function assess(result: Result) {
   const entities = new Map(result.entities.map((entity) => [entity.id, entity]))
   const missing: Link[] = []
   const extra: Link[] = []
   const found: Link[] = []
   const inventoryErrors: string[] = []
+
   for (const [file, spec] of Object.entries(expected)) {
     const effects = result.effects.filter(
       (effect) => effect.location.file === file,
     )
+
     if (effects.length !== spec.effectCount) {
       inventoryErrors.push(
         file +
@@ -63,6 +70,7 @@ function assess(result: Result) {
           effects.length,
       )
     }
+
     for (const [mode, count] of Object.entries(spec.modes ?? {})) {
       if (effects.filter((effect) => effect.mode === mode).length !== count) {
         inventoryErrors.push(
@@ -70,6 +78,7 @@ function assess(result: Result) {
         )
       }
     }
+
     for (const depSpec of spec.dependencies) {
       const deps = result.dependencies.filter(
         (dependency) =>
@@ -77,18 +86,21 @@ function assess(result: Result) {
           dependency.expression === depSpec.expression &&
           (depSpec.index === undefined || depSpec.index === dependency.index),
       )
+
       if (deps.length === 0) {
         inventoryErrors.push(
           file + ': missing dependency ' + depSpec.expression,
         )
         continue
       }
+
       for (const dep of deps) {
         const sources = new Set(
           result.paths
             .filter((path) => path.dependencyId === dep.id)
             .map((path) => entities.get(path.source)?.expression),
         )
+
         for (const source of depSpec.include ?? []) {
           const link = {
             dependency: dep.id,
@@ -97,6 +109,7 @@ function assess(result: Result) {
           }
           ;(sources.has(source) ? found : missing).push(link)
         }
+
         for (const source of depSpec.exclude ?? []) {
           if (sources.has(source)) {
             extra.push({
@@ -109,6 +122,7 @@ function assess(result: Result) {
       }
     }
   }
+
   return {
     found,
     missing,
@@ -120,8 +134,10 @@ function assess(result: Result) {
       'Only handwritten positive and negative oracle assertions are scored; this is not an exhaustive precision/recall estimate.',
   }
 }
+
 const report: Record<string, ReturnType<typeof assess>> = {}
 const pathChecks: Record<string, ReturnType<typeof assessPaths>> = {}
+
 for (const mode of [
   'standard-value',
   'standard-taint',
@@ -196,6 +212,7 @@ writeFileSync(
   resolve(directory, 'comparison.json'),
   JSON.stringify(output, null, 2) + '\n',
 )
+
 for (const [mode, score] of Object.entries(report)) {
   process.stdout.write(
     mode +
@@ -208,7 +225,9 @@ for (const [mode, score] of Object.entries(report)) {
       '\n',
   )
 }
+
 const target = report['extended-state']
+
 if (
   target.missing.length ||
   target.extra.length ||
@@ -217,13 +236,16 @@ if (
   !!pathChecks['extended-state']?.errors.length
 ) {
   process.stderr.write(JSON.stringify(target, null, 2) + '\n')
+
   if (pathChecks['extended-state']?.errors.length) {
     process.stderr.write(
       JSON.stringify(pathChecks['extended-state'], null, 2) + '\n',
     )
   }
+
   process.exitCode = 1
 }
+
 if (pathOracle) {
   process.stdout.write(
     'Path oracle: ' +

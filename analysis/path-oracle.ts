@@ -43,6 +43,7 @@ function positionMatches(actual: Location | undefined, expected: Position) {
     )
   )
 }
+
 function entityMatches(actual: Entity | undefined, expected: EntitySelector) {
   const { kind, expression, ...position } = expected
   return (
@@ -52,6 +53,7 @@ function entityMatches(actual: Entity | undefined, expected: EntitySelector) {
     (expression === undefined || expression === actual.expression)
   )
 }
+
 function functionPosition(token: string): Location | undefined {
   const match = /^(.*):(\d+):(\d+):(\d+):(\d+)#function$/.exec(token)
   return match
@@ -72,47 +74,60 @@ export function assessPaths(
 ): PathAssessment {
   const passed: string[] = [],
     errors: string[] = []
+
   if (oracle.schemaVersion !== '1.0.0') {
     return { passed, errors: ['Unsupported path oracle version'] }
   }
+
   if (result.schemaVersion !== '2.0.0') {
     return { passed, errors: ['Path checking requires result schema 2.0.0'] }
   }
+
   const entities = new Map(result.entities.map((entity) => [entity.id, entity]))
   const edges = new Map(result.edges.map((edge) => [edge.id, edge]))
   const dependencies = new Map(result.dependencies.map((dep) => [dep.id, dep]))
   const effects = new Map(result.effects.map((effect) => [effect.id, effect]))
+
   for (const path of result.paths) {
     const dep = dependencies.get(path.dependencyId)
     const fail = (reason: string) => errors.push(path.id + ': ' + reason)
+
     if (!dep || !effects.has(dep.effectId)) {
       fail('unknown dependency or Effect')
       continue
     }
+
     if (path.source !== path.nodes[0] || path.nodes.at(-1) !== dep.entityId) {
       fail('source/dependency endpoint mismatch')
     }
+
     if (path.edges.length + 1 !== path.nodes.length) {
       fail('disconnected node/edge sequence')
     }
+
     if (path.contexts?.length !== path.nodes.length) {
       fail('missing contextual node identities')
     }
+
     if (path.nodes.some((id) => !entities.has(id))) {
       fail('unknown intermediate entity')
     }
+
     for (const [index, id] of path.edges.entries()) {
       const edge = edges.get(id)
+
       if (!edge) {
         fail('unknown transition')
         continue
       }
+
       if (
         edge.from !== path.nodes[index] ||
         edge.to !== path.nodes[index + 1]
       ) {
         fail('intermediate connection mismatch')
       }
+
       if (
         !edge.composable ||
         ['closure-capture', 'hook-dependency', 'effect-dependency'].includes(
@@ -121,6 +136,7 @@ export function assessPaths(
       ) {
         fail('annotation composed into a value path')
       }
+
       if (
         edge.callContext &&
         (!entities.has(edge.callContext.site) ||
@@ -130,6 +146,7 @@ export function assessPaths(
       }
     }
   }
+
   const rootMatches = (path: Result['paths'][number], spec: PathCase) => {
     const dep = dependencies.get(path.dependencyId)
     return (
@@ -138,11 +155,14 @@ export function assessPaths(
       entityMatches(entities.get(path.source), spec.source)
     )
   }
+
   const pathMatches = (path: Result['paths'][number], spec: PathCase) => {
     if (spec.stopReason !== undefined && path.stopReason !== spec.stopReason) {
       return false
     }
+
     let previous = -1
+
     for (const checkpoint of spec.via ?? []) {
       const index = path.nodes.findIndex(
         (id, index) =>
@@ -151,11 +171,14 @@ export function assessPaths(
       if (index < 0) return false
       previous = index
     }
+
     previous = -1
+
     for (const transition of spec.transitions ?? []) {
       const index = path.edges.findIndex((id, index) => {
         if (index <= previous) return false
         const edge = edges.get(id)
+
         if (
           !edge ||
           edge.type !== transition.type ||
@@ -164,21 +187,25 @@ export function assessPaths(
         ) {
           return false
         }
+
         if (transition.rule !== undefined && transition.rule !== edge.rule) {
           return false
         }
+
         if (
           transition.provenance !== undefined &&
           transition.provenance !== edge.provenance
         ) {
           return false
         }
+
         if (
           transition.evidence &&
           !positionMatches(edge.evidence, transition.evidence)
         ) {
           return false
         }
+
         const context = transition.callContext
         return (
           !context ||
@@ -197,10 +224,13 @@ export function assessPaths(
       if (index < 0) return false
       previous = index
     }
+
     return true
   }
+
   for (const spec of oracle.required) {
     const candidates = result.paths.filter((path) => rootMatches(path, spec))
+
     if (!candidates.length) {
       errors.push(
         spec.id +
@@ -208,7 +238,9 @@ export function assessPaths(
       )
       continue
     }
+
     const invalid = candidates.filter((path) => !pathMatches(path, spec))
+
     if (invalid.length) {
       errors.push(
         spec.id +
@@ -219,10 +251,12 @@ export function assessPaths(
       passed.push(spec.id)
     }
   }
+
   for (const spec of oracle.forbidden) {
     const invalid = result.paths.filter(
       (path) => rootMatches(path, spec) && pathMatches(path, spec),
     )
+
     if (invalid.length) {
       errors.push(
         spec.id +
@@ -233,6 +267,7 @@ export function assessPaths(
       passed.push(spec.id)
     }
   }
+
   for (const [index, spec] of (oracle.annotations ?? []).entries()) {
     if (
       !result.edges.some(
@@ -250,5 +285,6 @@ export function assessPaths(
       passed.push('annotation:' + index)
     }
   }
+
   return { passed, errors }
 }

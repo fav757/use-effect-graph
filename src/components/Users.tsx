@@ -40,6 +40,7 @@ export function Users({
         if (reason instanceof DOMException && reason.name === 'AbortError') {
           return
         }
+
         setError('The directory could not be loaded.')
       })
       .finally(() => {

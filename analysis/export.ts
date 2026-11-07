@@ -52,10 +52,12 @@ const hash = (source: string) =>
   createHash('sha256').update(source).digest('hex').slice(0, 24)
 const rawId = (value: unknown): string =>
   typeof value === 'string' ? value : String((value as { id: number }).id)
+
 const rows = (data: Bqrs, name: string): unknown[][] => {
   if (!data[name]) throw new Error('Missing BQRS result set: ' + name)
   return data[name].tuples
 }
+
 const compare = (left: string, right: string) =>
   left < right ? -1 : left > right ? 1 : 0
 const unique = <T>(values: T[]): T[] => [
@@ -71,6 +73,7 @@ function contextualOrder(
   pairs: RawPair[],
 ) {
   const roles = new Map<string, string[]>()
+
   for (const pair of pairs) {
     for (const [node, role] of [
       [pair.source, 'source'],
@@ -81,12 +84,15 @@ function contextualOrder(
       roles.set(node, list)
     }
   }
+
   const links = new Map<string, { role: string; nodes: string[] }[]>()
+
   const link = (node: string, role: string, others: string[]) => {
     const list = links.get(node) ?? []
     list.push({ role, nodes: others })
     links.set(node, list)
   }
+
   for (const list of adjacency.values()) {
     for (const edge of list) {
       const label = JSON.stringify([edge.kind, edge.provenance])
@@ -94,12 +100,14 @@ function contextualOrder(
       link(edge.to, 'in:' + label, [edge.from])
     }
   }
+
   for (const list of summaries.values()) {
     for (const sub of list) {
       const tuple = [sub.arg, sub.par, sub.ret, sub.out]
       tuple.forEach((node, index) => link(node, 'summary:' + index, tuple))
     }
   }
+
   const base = new Map(
     [...nodes].map(([id, node]) => [
       id,
@@ -110,12 +118,15 @@ function contextualOrder(
       ]),
     ]),
   )
+
   const rank = (keys: Map<string, string>) => {
     const sorted = [...new Set(keys.values())].sort(compare)
     const indices = new Map(sorted.map((value, index) => [value, index]))
     return new Map([...keys].map(([id, key]) => [id, indices.get(key)!]))
   }
+
   let classes = rank(base)
+
   for (let round = 0; round < nodes.size; round++) {
     const keys = new Map(
       [...nodes.keys()].map((id) => [
@@ -140,6 +151,7 @@ function contextualOrder(
     classes = next
     if (stable) break
   }
+
   return new Map(
     [...nodes.keys()].map((id) => [
       id,
@@ -147,6 +159,7 @@ function contextualOrder(
     ]),
   )
 }
+
 function location(value: string): Location {
   const match = /^(.*):(\d+):(\d+):(\d+):(\d+)$/.exec(value)
   if (!match) throw new Error('Invalid source position: ' + value)
@@ -158,6 +171,7 @@ function location(value: string): Location {
     endColumn: +match[5],
   }
 }
+
 export function exportResult(
   inventory: Bqrs,
   flow: Bqrs,
@@ -170,29 +184,37 @@ export function exportResult(
       'CodeQL context keys collide; refusing to merge distinct flow contexts.',
     )
   }
+
   const limits = { ...defaults, ...overrides }
+
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value < 1) {
       throw new Error('Invalid limit: ' + key)
     }
   }
+
   const files = new Map<string, string[]>()
   const entities = new Map<string, Entity>()
+
   for (const [id, pos, kind, label] of rows(
     inventory,
     '#select',
   ) as string[][]) {
     const loc = location(pos)
+
     if (!files.has(loc.file)) {
       const absolute = resolve(sourceRoot, loc.file)
       const rel = relative(resolve(sourceRoot), absolute)
+
       if (rel === '..' || rel.startsWith('..' + sep) || resolve(rel) === rel) {
         throw new Error('Source outside root: ' + loc.file)
       }
+
       files.set(loc.file, readFileSync(absolute, 'utf8').split(/\r?\n/))
     }
+
     const lines = files.get(loc.file)!
-    let expression = lines
+    const expression = lines
       .slice(loc.startLine - 1, loc.endLine)
       .map((line, i) => {
         const first = i === 0 ? loc.startColumn - 1 : 0
@@ -203,6 +225,7 @@ export function exportResult(
       .join('\n')
     entities.set(id, { id, location: loc, kind, label, expression })
   }
+
   const effects = (rows(inventory, 'effects') as string[][])
     .map(([id, pos, mode]) => ({ id, location: location(pos), mode }))
     .sort((left, right) => left.id.localeCompare(right.id, 'en'))
@@ -216,18 +239,23 @@ export function exportResult(
     }))
     .sort((left, right) => left.id.localeCompare(right.id, 'en'))
   const nodes = new Map<string, RawNode>()
+
   for (const [id, entity, context] of rows(flow, 'pathNodes')) {
     const key = rawId(id),
       value = { entity: String(entity), context: String(context) }
+
     if (
       nodes.has(key) &&
       JSON.stringify(nodes.get(key)) !== JSON.stringify(value)
     ) {
       throw new Error('Conflicting BQRS path node: ' + key)
     }
+
     nodes.set(key, value)
   }
+
   const adjacency = new Map<string, RawEdge[]>()
+
   for (const [left, right, kind, provenance] of unique(
     rows(flow, 'pathEdges'),
   )) {
@@ -241,11 +269,14 @@ export function exportResult(
     list.push(edge)
     adjacency.set(edge.from, list)
   }
+
   const stableRaw = (id: string) => {
     const node = nodes.get(id)
     return node ? JSON.stringify([node.entity, node.context]) : 'unmapped'
   }
+
   const subpaths = new Map<string, RawSubpath[]>()
+
   for (const [arg, par, ret, out] of unique(rows(flow, 'subpaths'))) {
     const source = {
       arg: rawId(arg),
@@ -258,6 +289,7 @@ export function exportResult(
     list.push(source)
     subpaths.set(key, list)
   }
+
   const pairs: RawPair[] = unique(rows(flow, '#select')).map(
     ([effect, index, source, sink]) => ({
       effect: String(effect),
@@ -268,6 +300,7 @@ export function exportResult(
   )
   const order = contextualOrder(nodes, adjacency, subpaths, pairs)
   const nodeOrder = (id: string) => order.get(id) ?? stableRaw(id)
+
   for (const list of adjacency.values()) {
     list.sort((left, right) =>
       compare(
@@ -276,6 +309,7 @@ export function exportResult(
       ),
     )
   }
+
   for (const list of subpaths.values()) {
     list.sort((left, right) =>
       compare(
@@ -286,6 +320,7 @@ export function exportResult(
       ),
     )
   }
+
   pairs.sort((left, right) =>
     compare(
       JSON.stringify([
@@ -308,9 +343,11 @@ export function exportResult(
       .concat(dependencies.map((dependency) => dependency.entityId)),
   )
   const callEvidence = new Map<string, CallContext[]>()
+
   const addContext = (from: string, to: string, context: CallContext) => {
     const key = from + '\u0000' + to
     const list = callEvidence.get(key) ?? []
+
     if (
       !list.some(
         (context) => JSON.stringify(context) === JSON.stringify(context),
@@ -318,16 +355,20 @@ export function exportResult(
     ) {
       list.push(context)
     }
+
     callEvidence.set(key, list)
   }
+
   for (const [argument, parameter, site, target] of (inventory.callArguments
     ?.tuples ?? []) as string[][]) {
     addContext(argument, parameter, { action: 'enter', site, target })
   }
+
   for (const [returned, site, target] of (inventory.callReturns?.tuples ??
     []) as string[][]) {
     addContext(returned, site, { action: 'return', site, target })
   }
+
   const edgeContexts = (edge: RawEdge) =>
     callEvidence.get(
       nodes.get(edge.from)!.entity + '\u0000' + nodes.get(edge.to)!.entity,
@@ -387,6 +428,7 @@ export function exportResult(
     returnedAt: string
     target: string
   }[] = []
+
   const addEdge = (
     from: string,
     to: string,
@@ -398,9 +440,11 @@ export function exportResult(
     summary?: Summary,
   ) => {
     const target = entities.get(to)
+
     if (!target || !entities.has(from)) {
       throw new Error('Unmapped flow entity: ' + from + ' -> ' + to)
     }
+
     const id =
       'edge:' +
       hash(
@@ -417,9 +461,11 @@ export function exportResult(
       )
     used.add(from)
     used.add(to)
+
     if (callContext && entities.has(callContext.site)) {
       used.add(callContext.site)
     }
+
     edgeMap.set(id, {
       id,
       from,
@@ -435,6 +481,7 @@ export function exportResult(
     })
     return id
   }
+
   for (const dep of dependencies) {
     addEdge(
       dep.entityId,
@@ -452,15 +499,19 @@ export function exportResult(
     const contexts = new Set<string>()
     const issues = new Set<string>()
     const dedup = new Set<string>()
+
     const registerContext = (context: string) => {
       if (contexts.has(context)) return true
+
       if (contexts.size >= limits.maxContexts) {
         issues.add('context-limit')
         return false
       }
+
       contexts.add(context)
       return true
     }
+
     function* walk(
       current: string,
       target: string,
@@ -474,30 +525,39 @@ export function exportResult(
       ) {
         return
       }
+
       if (steps >= limits.maxSteps) {
         issues.add('step-limit')
         return
       }
+
       steps++
+
       if (depth > limits.maxDepth) {
         issues.add('depth-limit')
         return
       }
+
       if (!nodes.has(current)) {
         issues.add('unmapped-codeql-node')
         return
       }
+
       if (seen.has(current)) {
         issues.add('cycle')
         return
       }
+
       if (current === target) {
         yield []
         return
       }
+
       const nextSeen = new Set(seen).add(current)
+
       for (const edge of adjacency.get(current) ?? []) {
         const summaries = subpaths.get(pairKey(edge.from, edge.to)) ?? []
+
         if (summaries.length > 0) {
           for (const sub of summaries) {
             const evidence = callEvidence.get(
@@ -510,6 +570,7 @@ export function exportResult(
                 ? evidence[0].site
                 : stableRaw(sub.arg) + ' -> ' + stableRaw(sub.out)
             if (!registerContext(context)) return
+
             for (const inner of walk(sub.par, sub.ret, nextSeen, depth + 1)) {
               const enter: RawEdge = {
                 from: sub.arg,
@@ -525,6 +586,7 @@ export function exportResult(
                 provenance: 'CodeQL.PathGraph.subpaths',
                 summary: { type: edge.kind, provenance: edge.provenance },
               }
+
               for (const tail of walk(
                 edge.to,
                 target,
@@ -532,6 +594,7 @@ export function exportResult(
                 depth + inner.length + 2,
               )) {
                 yield [enter, ...inner, leave, ...tail]
+
                 if (
                   additionalPathFound ||
                   issues.has('step-limit') ||
@@ -545,6 +608,7 @@ export function exportResult(
         } else {
           for (const tail of walk(edge.to, target, nextSeen, depth + 1)) {
             yield [edge, ...tail]
+
             if (
               additionalPathFound ||
               issues.has('step-limit') ||
@@ -556,42 +620,53 @@ export function exportResult(
         }
       }
     }
+
     for (const pair of relevant) {
       if (additionalPathFound) break
       const source = nodes.get(pair.source)
+
       if (!source) {
         issues.add('unmapped-codeql-node')
         continue
       }
+
       for (const raw of walk(pair.source, pair.sink, new Set(), 0)) {
         if (raw.length > limits.maxDepth) {
           issues.add('depth-limit')
           continue
         }
+
         const sequence = [
           source.entity,
           ...raw.map((entry) => nodes.get(entry.to)?.entity ?? ''),
         ]
+
         if (sequence.some((id) => !entities.has(id))) {
           issues.add('unmapped-codeql-node')
           continue
         }
+
         if (mode.startsWith('extended')) {
           const frames: CallContext[] = []
           let rejected = false
+
           for (const edge of raw) {
             const actions = edgeContexts(edge)
+
             if (actions.length > 1) {
               issues.add('ambiguous-call-context')
               rejected = true
               break
             }
+
             const context = actions[0]
             if (!context) continue
+
             if (!registerContext(context.site)) {
               rejected = true
               break
             }
+
             if (context.action === 'enter') {
               frames.push(context)
             } else {
@@ -600,10 +675,12 @@ export function exportResult(
               )
               if (index < 0) continue
               const entered = frames[index]
+
               if (entered.site !== context.site) {
                 for (const id of [source.entity, entered.site, context.site]) {
                   if (entities.has(id)) used.add(id)
                 }
+
                 filteredPaths.push({
                   dependencyId: dep.id,
                   source: source.entity,
@@ -615,11 +692,14 @@ export function exportResult(
                 rejected = true
                 break
               }
+
               frames.splice(index, 1)
             }
           }
+
           if (rejected) continue
         }
+
         const pathContexts = [
           source.context,
           ...raw.map((edge) => nodes.get(edge.to)!.context),
@@ -641,11 +721,13 @@ export function exportResult(
         const key = JSON.stringify([sequence, pathContexts, transitions])
         if (dedup.has(key)) continue
         dedup.add(key)
+
         if (count === limits.maxPaths) {
           additionalPathFound = true
           issues.add('path-limit')
           break
         }
+
         const origin = entities.get(source.entity)!
         used.add(source.entity)
         const ids = raw.map((entry) =>
@@ -699,8 +781,10 @@ export function exportResult(
         })
         count++
       }
+
       if (issues.has('step-limit') || issues.has('context-limit')) break
     }
+
     searches.push({
       dependencyId: dep.id,
       retainedPaths: count,
@@ -710,6 +794,7 @@ export function exportResult(
       steps,
       contexts: contexts.size,
     })
+
     if (count === 0) {
       boundaries.push({
         dependencyId: dep.id,
@@ -718,6 +803,7 @@ export function exportResult(
         status: 'incomplete',
       })
     }
+
     for (const reason of [...issues].sort()) {
       diagnostics.push({
         dependencyId: dep.id,
@@ -726,13 +812,17 @@ export function exportResult(
       })
     }
   }
+
   const annotations = new Map<string, string[][]>()
+
   for (const row of unique(rows(inventory, 'annotations')) as string[][]) {
     const list = annotations.get(row[0]) ?? []
     list.push(row)
     annotations.set(row[0], list)
   }
+
   const annotated = [...used]
+
   for (let index = 0; index < annotated.length; index++) {
     for (const [parent, child, kind] of annotations.get(annotated[index]) ??
       []) {
@@ -750,6 +840,7 @@ export function exportResult(
       if (newlyReached) annotated.push(child)
     }
   }
+
   for (const effect of effects) {
     if (effect.mode === 'unsupported') {
       diagnostics.push({
@@ -759,6 +850,7 @@ export function exportResult(
       })
     }
   }
+
   return {
     schemaVersion: '2.0.0',
     mode,
@@ -801,6 +893,7 @@ export function exportResult(
     searches,
   }
 }
+
 export function toDot(result: Result) {
   const quote = (value: string) => JSON.stringify(value)
   const html = (value: string) =>
@@ -809,10 +902,12 @@ export function toDot(result: Result) {
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
+
   const compact = (value: string) => {
     const text = value.replace(/\s+/g, ' ').trim()
     return text.length > 48 ? text.slice(0, 45) + '…' : text
   }
+
   const lines = [
     'digraph Provenance {',
     'graph [rankdir=LR, bgcolor="#f8fafc", pad="0.45", nodesep="0.35", ranksep="0.65", outputorder=edgesfirst];',
@@ -820,6 +915,7 @@ export function toDot(result: Result) {
     'edge [color="#b3bfd2", arrowsize=0.6, penwidth=1.1, fontname="Segoe UI", fontsize=10, fontcolor="#64748b"];',
   ]
   const effects = new Map(result.effects.map((effect) => [effect.id, effect]))
+
   for (const entity of result.entities) {
     const effect = effects.get(entity.id)
     const palette = effect
@@ -866,6 +962,7 @@ export function toDot(result: Result) {
         '];',
     )
   }
+
   for (const edge of result.edges) {
     const annotation = ['closure-capture', 'hook-dependency'].includes(
       edge.type,
@@ -899,20 +996,24 @@ export function toDot(result: Result) {
         '];',
     )
   }
+
   lines.push('}')
   return lines.join('\n') + '\n'
 }
+
 if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   const [inventoryPath, flowPath, sourceRoot, mode, output, limitsPath] =
     process.argv.slice(2)
+
   if (!output) {
     throw new Error(
       'Usage: node analysis/export.ts inventory.json flow.json sourceRoot mode output.json [limits.json]',
     )
   }
+
   const result = exportResult(
     JSON.parse(readFileSync(inventoryPath, 'utf8').replace(/^\uFEFF/, '')),
     JSON.parse(readFileSync(flowPath, 'utf8').replace(/^\uFEFF/, '')),

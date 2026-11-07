@@ -1,8 +1,10 @@
 import type { Dependency, Effect, Entity, Result } from './types.ts'
+
 export const compact = (value: string | undefined, length = 60) => {
   const text = (value ?? '').replace(/\s+/g, ' ').trim()
   return text.length > length ? text.slice(0, length - 1) + '…' : text
 }
+
 export const basename = (value: string) => value.split('/').at(-1) ?? value
 export const at = (entity: Entity | undefined) =>
   entity

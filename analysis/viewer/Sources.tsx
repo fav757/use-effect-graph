@@ -1,6 +1,7 @@
 import { Icon } from './Icon.tsx'
 import type { Entity, FlowPath, SourceRole } from './types.ts'
 import { at, color, compact, names } from './utils.ts'
+
 export function Sources({
   paths,
   entities,
@@ -30,6 +31,7 @@ export function Sources({
     (path) => (role === 'origin') === (path.sourceRole === 'origin'),
   )
   const sources = new Map<string, { entity: Entity; paths: FlowPath[] }>()
+
   for (const path of matching) {
     const entity = entities.get(path.source)
     if (!entity) continue
@@ -37,6 +39,7 @@ export function Sources({
     entry.paths.push(path)
     sources.set(path.source, entry)
   }
+
   const priority = (entity: Entity) =>
     entity.kind === 'react-state' ? 0 : entity.kind === 'literal' ? 1 : 2
   const list = [...sources.values()].sort(

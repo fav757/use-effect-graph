@@ -3,9 +3,11 @@ import { resolve } from 'node:path'
 import assert from 'node:assert/strict'
 import type { Result } from './export.ts'
 const directory = process.argv[2]
+
 if (!directory) {
   throw new Error('Usage: node analysis/app-check.ts output-directory')
 }
+
 const read = (mode: string) =>
   JSON.parse(readFileSync(resolve(directory, mode + '.json'), 'utf8')) as Result
 const base = read('extended')

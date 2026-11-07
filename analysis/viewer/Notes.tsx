@@ -1,6 +1,7 @@
 import { Icon } from './Icon.tsx'
 import type { Dependency, Effect, Result } from './types.ts'
 import { reasons } from './utils.ts'
+
 export function Notes({
   data,
   effect,

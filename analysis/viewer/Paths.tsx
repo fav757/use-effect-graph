@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Icon } from './Icon.tsx'
 import type { Dependency, Edge, Entity, FlowPath, SourceRole } from './types.ts'
 import { at, compact, names, rules } from './utils.ts'
+
 function Transition({
   edge,
   context,
@@ -41,6 +42,7 @@ function Transition({
     </details>
   )
 }
+
 function PathCard({
   path,
   dependency,
@@ -111,6 +113,7 @@ function PathCard({
     </details>
   )
 }
+
 export function Paths({
   paths,
   dependency,

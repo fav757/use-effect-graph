@@ -26,6 +26,7 @@ export function useSelection(data: Result) {
       effect: effect.id,
       dependency: String(dependency?.index ?? 0),
     })
+
     // Replacing the URL can be restricted for local files; a hash still provides the same deep link.
     try {
       history.replaceState(null, '', '#' + hash.toString())

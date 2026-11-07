@@ -12,8 +12,10 @@ export function parseCsv(text: string): string[][] {
     field = '',
     quoted = false
   text = text.replace(/^\uFEFF/, '')
+
   for (let index = 0; index < text.length; index++) {
     const char = text[index]
+
     if (char === '"') {
       if (quoted && text[index + 1] === '"') {
         field += '"'
@@ -34,18 +36,23 @@ export function parseCsv(text: string): string[][] {
       field += char
     }
   }
+
   if (quoted) throw new Error('Unterminated CSV field')
+
   if (field || row.length) {
     row.push(field)
     rows.push(row)
   }
+
   for (const fields of rows) {
     if (fields.length !== 6) {
       throw new Error('Expected six columns in edges.csv')
     }
   }
+
   return rows
 }
+
 const escapeDot = (value: string) =>
   value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
 const escapeHtml = (value: string) =>
@@ -63,11 +70,13 @@ type Node = {
   line: number
   kind: string
 }
+
 export function baselineDot(
   rows: string[][],
   readSource: (path: string) => string = (path) => readFileSync(path, 'utf8'),
 ) {
   const nodes = new Map<string, { label: string; url: string }>()
+
   for (const [
     parentId,
     parentLabel,
@@ -79,24 +88,29 @@ export function baselineDot(
     nodes.set(parentId, { label: parentLabel, url: parentUrl })
     nodes.set(childId, { label: childLabel, url: childUrl })
   }
+
   const groups = new Map<string, Node[]>()
   const nodeKinds = new Map<string, string>()
   const sources = new Map<string, string[]>()
   let effectCount = 0
+
   for (const [id, node] of nodes) {
     const location = /^(.*):(\d+):(\d+):(\d+):(\d+)$/.exec(node.url)
     if (!location) throw new Error(`Invalid source URL: ${node.url}`)
     const file = location[1].split('/').at(-1)!
     const sourcePath = fileURLToPath(location[1])
+
     if (!sources.has(sourcePath)) {
       sources.set(sourcePath, readSource(sourcePath).split(/\r?\n/))
     }
+
     const line = Number(location[2])
     const callText = sources
       .get(sourcePath)!
       [line - 1].slice(Number(location[3]) - 1)
     let kind = 'dependency',
       label = node.label
+
     if (/^useEffectEvent\s*\(/i.test(callText)) {
       kind = 'event'
       label = 'useEffectEvent'
@@ -108,11 +122,13 @@ export function baselineDot(
       label = 'useEffect'
       effectCount++
     }
+
     nodeKinds.set(id, kind)
     const group = groups.get(file) ?? []
     group.push({ id, label, url: node.url, line, kind })
     groups.set(file, group)
   }
+
   const lines = [
     'digraph UseEffects {',
     'graph [rankdir=LR, bgcolor="#f5f7fb", pad="0.5", nodesep="0.28", ranksep="0.7", compound=true, fontname="Segoe UI", fontsize=18, fontcolor="#17233c"];',
@@ -120,12 +136,14 @@ export function baselineDot(
     'edge [color="#9aaac2", penwidth=1.3, arrowsize=0.65];',
   ]
   let index = 0
+
   for (const [file, group] of [...groups].sort(([first], [second]) =>
     first.localeCompare(second, 'en', { sensitivity: 'base' }),
   )) {
     lines.push(
       `subgraph cluster_${index++} { label="${escapeDot(file)}"; labeljust=l; style="rounded,filled"; color="#dce3ee"; fillcolor="white"; margin=24;`,
     )
+
     for (const node of group.sort(
       (first, second) =>
         first.line - second.line ||
@@ -134,6 +152,7 @@ export function baselineDot(
       let fill = '#f0f5ff',
         stroke = '#c8d8f3',
         ink = '#254b82'
+
       if (node.kind === 'effect') {
         fill = '#ede9fe'
         stroke = '#c4b5fd'
@@ -147,14 +166,18 @@ export function baselineDot(
         stroke = '#99d6c5'
         ink = '#176b57'
       }
+
       lines.push(
         `"${node.id}" [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT"><FONT COLOR="${ink}"><B>${escapeHtml(node.label)}</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT COLOR="#738199" POINT-SIZE="10">line ${node.line}</FONT></TD></TR></TABLE>>, fillcolor="${fill}", color="${stroke}", URL="${escapeDot(node.url)}", tooltip="${escapeDot(file)}:${node.line}"];`,
       )
     }
+
     lines.push('}')
   }
+
   for (const [parentId, , , childId] of rows) {
     let style = ''
+
     if (['event', 'stable'].includes(nodeKinds.get(parentId)!)) {
       style = ' [style=dashed, color="#c48336"]'
     } else if (
@@ -163,8 +186,10 @@ export function baselineDot(
     ) {
       style = ' [style=dotted, color="#c48336"]'
     }
+
     lines.push(`"${parentId}" -> "${childId}"${style};`)
   }
+
   lines.push('}')
   return {
     dot: lines.join('\n') + '\n',
@@ -176,11 +201,13 @@ export function baselineDot(
     },
   }
 }
+
 export function renderBaseline(directory: string, execute: Command = command) {
   const { dot, totals } = baselineDot(
     parseCsv(readFileSync(join(directory, 'edges.csv'), 'utf8')),
   )
   writeFileSync(join(directory, 'use-effects.dot'), dot.replaceAll('\n', EOL))
+
   for (const format of ['svg', 'png']) {
     execute('dot', [
       `-T${format}`,
@@ -189,16 +216,19 @@ export function renderBaseline(directory: string, execute: Command = command) {
       join(directory, `use-effects.${format}`),
     ])
   }
+
   const svg = readFileSync(join(directory, 'use-effects.svg'), 'utf8')
   const assets = fileURLToPath(
     new URL('../analysis/viewer/dist/', import.meta.url),
   )
+
   for (const extension of ['js', 'css']) {
     copyFileSync(
       join(assets, `viewer-baseline.${extension}`),
       join(directory, `viewer-baseline.${extension}`),
     )
   }
+
   const serialize = (value: unknown) =>
     JSON.stringify(value).replaceAll('<', '\\u003c')
   writeFileSync(
@@ -213,6 +243,7 @@ export function renderBaseline(directory: string, execute: Command = command) {
     `Rendered ${totals.nodes} nodes and ${totals.connections} edges across ${totals.files} files.`,
   )
 }
+
 if (isMain(import.meta.url)) {
   main(() => {
     const parsed = options(process.argv.slice(2), ['OutputDirectory'])

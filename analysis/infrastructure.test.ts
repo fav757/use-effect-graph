@@ -26,12 +26,14 @@ import { baselineDot, parseCsv } from '../codeql-graph/render-graph.ts'
 
 function workspace(action: (directory: string) => void) {
   const directory = mkdtempSync(join(tmpdir(), 'effect report '))
+
   try {
     action(directory)
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }
 }
+
 test('runner preserves defaults, legacy options, aliases and numeric bounds', () => {
   const defaults = parseRunOptions([])
   assert.deepEqual(
@@ -57,6 +59,7 @@ test('runner preserves defaults, legacy options, aliases and numeric bounds', ()
     [custom.MaxDepth, custom.MaxContexts, custom.Threads, custom.skipRender],
     [7, 8, 4, true],
   )
+
   for (const args of [
     ['-Ram', '1024'],
     ['--threads', '33'],
@@ -76,12 +79,14 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
     mkdirSync(source)
     writeFileSync(join(source, 'file.ts'), 'const value = 1')
     const calls: { executable: string; args: string[] }[] = []
+
     const execute: Command = (executable, args) => {
       calls.push({ executable, args })
       if (args[0] === 'version') return '{"version":"reference"}'
       if (args[0] === 'resolve') return '/packs/codeql/javascript-all/2.10.0'
       return ''
     }
+
     runAnalysis(
       [
         '-SourceDirectory',
@@ -113,6 +118,7 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
           call.args.includes(`--source-root=${source}`),
       ),
     )
+
     for (const call of calls.filter((call) =>
       ['query', 'database'].includes(call.args[0]),
     )) {
@@ -120,6 +126,7 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
         call.args.includes('--threads=3') && call.args.includes('--ram=4096'),
       )
     }
+
     assert(calls.every((call) => !/powershell|pwsh/i.test(call.executable)))
     const manifest = JSON.parse(readFileSync(join(output, 'run.json'), 'utf8'))
     assert.equal(manifest.stages.length, 19)
@@ -133,9 +140,11 @@ test('runner rejects existing databases and output inside source before invoking
       database = join(directory, 'existing')
     mkdirSync(source)
     mkdirSync(database)
+
     const never: Command = () => {
       throw new Error('Unexpected command')
     }
+
     assert.throws(
       () =>
         runAnalysis(

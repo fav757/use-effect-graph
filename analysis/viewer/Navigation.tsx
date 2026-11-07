@@ -1,6 +1,7 @@
 import { Icon } from './Icon.tsx'
 import type { Effect, Result } from './types.ts'
 import { basename, compact, depsFor, modeName } from './utils.ts'
+
 export function visibleEffects(data: Result, search: string) {
   return data.effects.filter((effect) =>
     `${effect.location.file} ${effect.mode} ${depsFor(data, effect)
@@ -10,6 +11,7 @@ export function visibleEffects(data: Result, search: string) {
       .includes(search.trim().toLowerCase()),
   )
 }
+
 export function Navigation({
   data,
   visible,
@@ -26,12 +28,14 @@ export function Navigation({
   onSelect: (effect: Effect) => void
 }) {
   const groups = new Map<string, Effect[]>()
+
   for (const effect of visible) {
     groups.set(effect.location.file, [
       ...(groups.get(effect.location.file) ?? []),
       effect,
     ])
   }
+
   return (
     <aside className="sidebar" aria-label="Effect navigation">
       <div className="brand">

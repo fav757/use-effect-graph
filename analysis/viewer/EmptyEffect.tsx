@@ -1,4 +1,5 @@
 import type { Effect, Entity } from './types.ts'
+
 export function EmptyEffect({
   effect,
   entity,

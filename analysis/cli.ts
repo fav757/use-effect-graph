@@ -14,15 +14,18 @@ export type Command = (
   arguments_: string[],
   capture?: boolean,
 ) => string
+
 export const command: Command = (executable, arguments_, capture = false) => {
   const child = spawnSync(executable, arguments_, {
     encoding: 'utf8',
     stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit',
   })
   if (child.error) throw child.error
+
   if (child.status !== 0) {
     throw new ProcessFailure(child.status ?? 1, executable)
   }
+
   return child.stdout ?? ''
 }
 
@@ -38,30 +41,39 @@ export function options(
     [...values, ...switches].map((name) => [normalize(name), name]),
   )
   const parsed: Record<string, string | boolean> = {}
+
   for (let index = 0; index < arguments_.length; index++) {
     const [flag, ...inline] = arguments_[index].split('=')
     const name = names.get(normalize(flag))
+
     if (!flag.startsWith('-') || !name) {
       throw new Error(`Unknown option: ${flag}`)
     }
+
     if (switches.includes(name)) {
       if (inline.length) {
         throw new Error(`Switch ${flag} does not accept a value`)
       }
+
       parsed[name] = true
     } else {
       const value = inline.length ? inline.join('=') : arguments_[++index]
+
       if (!value || value.startsWith('-')) {
         throw new Error(`Missing value for ${flag}`)
       }
+
       parsed[name] = value
     }
   }
+
   return parsed
 }
+
 export function isMain(url: string) {
   return !!process.argv[1] && resolve(process.argv[1]) === fileURLToPath(url)
 }
+
 export function main(action: () => unknown) {
   try {
     action()

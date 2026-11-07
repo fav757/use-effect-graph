@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Icon } from './Icon.tsx'
 import type { Result } from './types.ts'
+
 export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
   const [exportsOpen, setExportsOpen] = useState(false)
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setExportsOpen(false)
     }
+
     document.addEventListener('keydown', close)
     return () => document.removeEventListener('keydown', close)
   }, [])

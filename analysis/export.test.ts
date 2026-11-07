@@ -45,6 +45,7 @@ test('path identity preserves meaningful contexts and merges equivalent aliases'
 
 test('unique path count below or exactly at the limit is complete', () => {
   const { inventory, flow } = data()
+
   for (const maxPaths of [1, 2]) {
     const result = exportResult(inventory, flow, sourceRoot, 'extended-state', {
       maxPaths,
@@ -156,8 +157,10 @@ test('typed paths are deterministic under row shuffles and BQRS renumbering', ()
     [{ id: 1 }, { id: 4 }, 'state-update', 'basis B'],
   ])
   const first = exportResult(inventory, flow, sourceRoot, 'extended-state')
+
   for (let seed = 1; seed <= 12; seed++) {
     let random = seed
+
     const permute = (input: typeof flow | typeof inventory) => {
       const output = JSON.parse(
         JSON.stringify(input, (key, value: unknown) =>
@@ -166,6 +169,7 @@ test('typed paths are deterministic under row shuffles and BQRS renumbering', ()
             : value,
         ),
       ) as Record<string, { columns: []; tuples: unknown[][] }>
+
       for (const entry of Object.values(output)) {
         for (let index = entry.tuples.length - 1; index > 0; index--) {
           random = (random * 1664525 + 1013904223) >>> 0
@@ -176,8 +180,10 @@ test('typed paths are deterministic under row shuffles and BQRS renumbering', ()
           ]
         }
       }
+
       return output
     }
+
     assert.deepEqual(
       exportResult(
         permute(inventory),
@@ -214,11 +220,13 @@ test('lookahead stops at the first additional unique path', () => {
   const { inventory, flow } = data()
   flow.pathEdges = table([])
   flow['#select'] = table([])
+
   for (let index = 100; index < 1100; index++) {
     flow.pathNodes.tuples.push([{ id: index }, 'a', 'invocation ' + index])
     flow.pathEdges.tuples.push([{ id: index }, { id: 4 }, 'value-flow', ''])
     flow['#select'].tuples.push(['effect', 0, { id: index }, { id: 4 }])
   }
+
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state', {
     maxPaths: 1,
     maxSteps: 10,
@@ -295,6 +303,7 @@ test('bounded selection is independent of aliases with identical context labels'
     ['effect', 0, { id: 1 }, { id: 4 }],
     ['effect', 0, { id: 11 }, { id: 4 }],
   ])
+
   for (const maxPaths of [1, 2]) {
     const original = exportResult(
       inventory,
@@ -319,6 +328,7 @@ test('bounded selection is independent of aliases with identical context labels'
 })
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const table = (tuples: unknown[][]) => ({ columns: [], tuples })
+
 function data() {
   const inventory = {
     '#select': table([
@@ -360,6 +370,7 @@ function data() {
   }
   return { inventory, flow }
 }
+
 test('retains effects with no edges and distinct dependency positions', () => {
   const { inventory, flow } = data()
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
@@ -439,9 +450,11 @@ test('output is independent of CodeQL entity numbers and row order', () => {
       (_, number) => '"id":' + (+number + 1000),
     ),
   )
+
   for (const t of Object.values(changed) as { tuples: unknown[][] }[]) {
     t.tuples.reverse()
   }
+
   assert.deepEqual(
     exportResult(inventory, changed, sourceRoot, 'extended-state'),
     first,

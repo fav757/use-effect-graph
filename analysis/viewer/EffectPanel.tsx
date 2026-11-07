@@ -7,6 +7,7 @@ import { Paths } from './Paths.tsx'
 import { Notes } from './Notes.tsx'
 import type { Dependency, Effect, Result, SourceRole } from './types.ts'
 import { basename, compact, pathsFor } from './utils.ts'
+
 export function EffectPanel({
   data,
   svg,
@@ -120,6 +121,7 @@ export function EffectPanel({
     </section>
   )
 }
+
 function DependencyContent({
   data,
   effect,

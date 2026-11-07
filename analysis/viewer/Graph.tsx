@@ -46,6 +46,7 @@ export function Graph({
   }, [visible, width, legacy])
   useEffect(() => {
     const svg = canvas.current?.querySelector('svg')
+
     if (svg) {
       svg.style.width = `${width * scale}px`
       svg.style.height = 'auto'
@@ -60,6 +61,7 @@ export function Graph({
     const edgeIds = new Set(paths.flatMap((path) => path.edges))
     if (effect) nodeIds.add(effect.id)
     if (dependency) nodeIds.add(dependency.entityId)
+
     for (const edge of data.edges) {
       if (
         edge.type === 'effect-dependency' &&
@@ -69,6 +71,7 @@ export function Graph({
         edgeIds.add(edge.id)
       }
     }
+
     for (const node of canvas.current?.querySelectorAll('.node') ?? []) {
       node.classList.toggle(
         'dimmed',
@@ -76,6 +79,7 @@ export function Graph({
           !nodeIds.has(node.querySelector('title')?.textContent ?? ''),
       )
     }
+
     for (const edge of canvas.current?.querySelectorAll('.edge') ?? []) {
       edge.classList.toggle('dimmed', highlight && !edgeIds.has(edge.id))
     }
