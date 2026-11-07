@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import stylistic from '@stylistic/eslint-plugin'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
@@ -14,11 +15,17 @@ export default tseslint.config(
       globals: globals.browser,
     },
     plugins: {
+      '@stylistic': stylistic,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
     },
     rules: {
       ...reactHooks.configs.flat.recommended.rules,
+      '@stylistic/padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'multiline-block-like' },
+        { blankLine: 'always', prev: 'multiline-block-like', next: '*' },
+      ],
       curly: ['error', 'multi-line', 'consistent'],
       'id-length': [
         'error',
