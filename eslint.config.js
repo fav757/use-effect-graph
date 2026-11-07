@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
+import prettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
@@ -44,4 +45,5 @@ export default tseslint.config(
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+  prettierRecommended,
 )
