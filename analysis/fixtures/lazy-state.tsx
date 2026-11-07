@@ -10,4 +10,3 @@ export function LazyStates() {
   const [right] = useLazy('lazy-right')
   useEffect(() => {}, [left, right])
 }
-

@@ -11,4 +11,3 @@ export function CustomHooks() {
   const [right] = useLocal('hook-right')
   useEffect(() => {}, [left, right])
 }
-

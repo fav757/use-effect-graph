@@ -5,4 +5,3 @@ export function Properties() {
   const { id } = user
   useEffect(() => {}, [user, user.id, id])
 }
-

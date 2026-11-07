@@ -6,4 +6,3 @@ export function Memo() {
   const callback = useCallback(() => captured, [captured])
   useEffect(() => {}, [memo, callback])
 }
-

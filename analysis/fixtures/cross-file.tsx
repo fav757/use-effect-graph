@@ -5,4 +5,3 @@ export function CrossFile() {
   const value = imported('import-origin', 'import-unused')
   useEffect(() => {}, [value])
 }
-

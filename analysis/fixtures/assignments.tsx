@@ -6,4 +6,3 @@ export function Assignments() {
   const third = second
   useEffect(() => {}, [third, third])
 }
-
