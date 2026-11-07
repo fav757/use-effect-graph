@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { opaque } from 'unavailable-fixture-module'
+
 function recursive(value: string): string {
   return recursive(value)
 }

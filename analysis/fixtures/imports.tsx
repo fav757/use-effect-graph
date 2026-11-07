@@ -5,9 +5,11 @@ export function Imports() {
   effect(() => {}, ['alias-origin'])
   Namespace.useEffect(() => {}, ['namespace-origin'])
   React.useEffect(() => {}, ['default-origin'])
+
   function useEffect(callback: () => void, deps: unknown[]) {
     callback()
     return deps
   }
+
   useEffect(() => {}, ['local-fake'])
 }
