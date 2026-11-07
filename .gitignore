@@ -23,3 +23,5 @@ codeql-graph/provenance/
 codeql-graph/provenance-fixtures/
 codeql-queries/**/*.qlx
 codeql-queries/**/.cache/
+
+.migration-reference/

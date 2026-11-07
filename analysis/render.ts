@@ -1,31 +1,52 @@
-import { readFileSync, writeFileSync } from 'node:fs'
-import { basename, dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { toDot } from './export.ts'
-import type { Result } from './export.ts'
-const path = process.argv[2]
-if (!path?.endsWith('.json'))
-  throw new Error('Usage: node analysis/render.ts result.json')
-const result = JSON.parse(
-  readFileSync(path, 'utf8').replace(/^\uFEFF/, ''),
-) as Result
-if (!['1.0.0', '2.0.0'].includes(result.schemaVersion))
-  throw new Error('Unsupported result schema: ' + result.schemaVersion)
-if (process.argv.includes('--html')) {
-  const template = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), 'viewer-template.html'),
-    'utf8',
-  )
-  const svg = readFileSync(path.replace(/\.json$/, '.svg'), 'utf8')
-  const payload = JSON.stringify(result)
-    .replaceAll('<', '\\u003c')
-    .replaceAll('\u2028', '\\u2028')
-    .replaceAll('\u2029', '\\u2029')
-  const html = template
-    .replace('{{DATA}}', () => payload)
-    .replace('{{GRAPH}}', () => svg.slice(svg.indexOf('<svg')))
-    .replaceAll('{{BASENAME}}', encodeURIComponent(basename(path, '.json')))
-  writeFileSync(path.replace(/\.json$/, '.html'), html)
-} else {
-  writeFileSync(path.replace(/\.json$/, '.dot'), toDot(result))
+import { command, isMain, main, options } from './cli.ts'
+import type { Command } from './cli.ts'
+import { packageReport, readResult } from './report.ts'
+
+export function renderReport(
+  jsonPath: string,
+  execute: Command = command,
+  htmlOnly = false,
+  dotOnly = false,
+) {
+  if (!jsonPath.endsWith('.json'))
+    throw new Error('Expected a .json result path')
+  if (!htmlOnly) {
+    writeFileSync(
+      jsonPath.replace(/\.json$/, '.dot'),
+      toDot(readResult(jsonPath)),
+    )
+    if (dotOnly) return
+    for (const format of ['svg', 'png'])
+      execute('dot', [
+        `-T${format}`,
+        jsonPath.replace(/\.json$/, '.dot'),
+        '-o',
+        jsonPath.replace(/\.json$/, `.${format}`),
+      ])
+  }
+  packageReport(jsonPath)
+  console.log(`Graph viewer: ${jsonPath.replace(/\.json$/, '.html')}`)
 }
+if (isMain(import.meta.url))
+  main(() => {
+    const arguments_ = process.argv.slice(2)
+    const positional =
+      arguments_[0] && !arguments_[0].startsWith('-')
+        ? arguments_.shift()
+        : undefined
+    const parsed = options(arguments_, ['JsonPath'], ['html', 'dot-only'])
+    const path = positional ?? parsed.JsonPath
+    if (typeof path !== 'string')
+      throw new Error(
+        'Usage: node analysis/render.ts result.json (or -JsonPath result.json) [--html | --dot-only]',
+      )
+    renderReport(
+      resolve(path),
+      command,
+      parsed.html === true,
+      parsed['dot-only'] === true,
+    )
+  })

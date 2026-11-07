@@ -9,12 +9,13 @@
     "verbatimModuleSyntax": true,
     "esModuleInterop": true,
     "strict": true,
+    "erasableSyntaxOnly": true,
     "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["analysis/*.ts"],
+  "include": ["analysis/*.ts", "codeql-graph/*.ts"],
   "exclude": ["analysis/fixtures"]
 }

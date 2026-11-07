@@ -1,24 +1,28 @@
 # Effect provenance analyzer
 
-Requires PowerShell, Node.js 24+, Graphviz, and CodeQL CLI 2.26.4 with
+Requires Node.js 24+, Graphviz, and CodeQL CLI 2.26.4 with
 `codeql/javascript-all` **2.10.0**. The pack dependency is pinned.
-No application code, real APIs, npm build, or ESLint commands are executed.
+Analysis does not execute application code, real APIs, application builds, or ESLint.
 
 See [RESULTS.md](RESULTS.md) for the measured comparison, application checks,
 tool versions, timings, and reproducibility results from this implementation.
 
+See [migration verification](MIGRATION.md) for the infrastructure regression results.
+
 Run from the repository root:
 
-```powershell
+```sh
 npm run typecheck:analysis
 npm run typecheck:app
+npm run typecheck:viewer
 npm run test:analysis
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1
+npm run build:viewer
+npm run analysis
 node analysis/app-check.ts codeql-graph/provenance
 
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1 `
-  -SourceDirectory analysis/fixtures `
-  -OutputDirectory codeql-graph/provenance-fixtures `
+npm run analysis -- \
+  -SourceDirectory analysis/fixtures \
+  -OutputDirectory codeql-graph/provenance-fixtures \
   -Expectations analysis/fixtures/expected.json
 ```
 
@@ -54,16 +58,49 @@ dependency arrays remain visible in the navigation.
 
 The Graph overview tab highlights the selected dependency and provides zoom
 controls. The export menu links to the unchanged JSON and the full SVG/PNG
-graph. The viewer uses `analysis/viewer-template.html`; the original baseline
-viewer is preserved separately. Regenerate the report directly from JSON:
+graph. The React viewer lives in `analysis/viewer/`; the baseline graph has a separate React entrypoint with its original styles. Regenerate the report directly from JSON:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/render.ps1 `
+```sh
+npm run report -- \
   -JsonPath codeql-graph/provenance/extended-state.json
 ```
 
-The original `example.ql`, CSV renderer and viewer are preserved.
+The original `example.ql` is unchanged; the CSV renderer and viewer are migrated to TypeScript and React.
 `baseline.ql` is an exact copy of the original query.
+
+## Offline viewer and packaging
+
+`npm run build:viewer` builds both React viewers independently into
+`analysis/viewer/dist`. It uses the existing Vite, React and TypeScript
+dependencies. Rebuild only when viewer source changes; analysis never invokes a
+viewer or application build. Run this command once before rendering reports.
+
+`npm run report -- result.json` regenerates DOT with the unchanged `toDot`,
+renders SVG/PNG with Graphviz, and packages the report without CodeQL.
+`npm run report -- result.json --html` only repackages existing JSON/SVG;
+`--dot-only` retains the former direct `render.ts` DOT-only operation.
+`-JsonPath result.json` and `--json-path result.json` are also accepted.
+
+The minimal `<mode>.html` loads `<mode>.data.js` synchronously before the
+ordinary IIFE `viewer.js` bundle. `window.ANALYSIS_DATA` contains the complete,
+unchanged JSON object; `window.REPORT_ASSETS` contains the original Graphviz
+SVG and artifact stem. React renders the interface; SVG presentation is adapted
+in one component without rebuilding graph geometry. CSS is separate in
+`viewer.css`. There is no runtime JSON request, module script, HTML template
+replacement, or server. Open the HTML directly under `file://`.
+
+Copy HTML, data JS, viewer JS/CSS, JSON, SVG and PNG together to move a report.
+Reports for multiple modes can share viewer JS/CSS in one output directory.
+The baseline renderer uses corresponding `viewer-baseline.js`/`.css` assets
+and `use-effects.data.js` with the same offline loading mechanism.
+
+All existing runner option names/defaults remain available, including
+single-dash PascalCase names; double-dash kebab-case aliases are accepted too.
+Native child failures propagate their exit status. `run.json` retains analysis
+metadata and omits the obsolete PowerShell version field;
+the Node version remains recorded. Graphviz and the pinned CodeQL toolchain
+remain external dependencies. Node 24+ is required. Shell continuation examples
+use POSIX syntax; on Windows, use the same command on one line.
 
 ## Standard-library audit and differences
 

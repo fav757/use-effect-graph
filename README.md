@@ -17,14 +17,17 @@ rules, path oracle, and traversal budgets. [The recorded results](analysis/RESUL
 document earlier verification and comparisons; they are not checks performed
 when you clone or run this project.
 
+See [migration verification](analysis/MIGRATION.md) for the infrastructure regression results.
+
 ## Setup and example application
 
 Use Node.js **24+** and npm. The analysis scripts execute TypeScript directly
 with Node.
 
-Run commands from the repository root:
+Run commands from the repository root. Multi-line examples use POSIX shell
+continuations; on Windows, enter each command on one line:
 
-```powershell
+```sh
 npm ci
 npm run dev
 ```
@@ -48,7 +51,6 @@ The example covers:
 
 In addition to Node/npm dependencies, install:
 
-- PowerShell.
 - CodeQL CLI; the documented toolchain uses **2.26.4**.
 - The CodeQL JavaScript library pack **`codeql/javascript-all` 2.10.0**. The
   query pack pins this version, and the runner checks the resolved library path.
@@ -57,7 +59,7 @@ In addition to Node/npm dependencies, install:
 
 Check availability:
 
-```powershell
+```sh
 node --version
 codeql version
 dot -V
@@ -65,8 +67,9 @@ dot -V
 
 Analyze `src` and generate the report:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1
+```sh
+npm run build:viewer
+npm run analysis
 ```
 
 Open **`codeql-graph/provenance/extended-state.html`** in a browser. The offline
@@ -90,13 +93,13 @@ output directory replaces generated reports there.
 
 The pipeline runs all modes below; it renders `extended-state` by default.
 
-| Mode | Purpose |
-| --- | --- |
-| `baseline` / `baseline-units` | Original syntactic query and normalized comparison units |
-| `standard-value` | Standard CodeQL value-preserving flow |
-| `standard-taint` | Standard flow including supported transformations |
-| `extended` | Taint flow plus callback identity and call-context validation; stops at state slots and unknown calls |
-| `extended-state` | Extended analysis including possible initial and setter values, with distinct transition types |
+| Mode                          | Purpose                                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `baseline` / `baseline-units` | Original syntactic query and normalized comparison units                                              |
+| `standard-value`              | Standard CodeQL value-preserving flow                                                                 |
+| `standard-taint`              | Standard flow including supported transformations                                                     |
+| `extended`                    | Taint flow plus callback identity and call-context validation; stops at state slots and unknown calls |
+| `extended-state`              | Extended analysis including possible initial and setter values, with distinct transition types        |
 
 An inventory query also retains Effects with empty, absent, or unsupported
 dependency arrays. React Effects are recognized by import origin, including
@@ -106,13 +109,14 @@ aliases and namespace/default imports.
 
 Outputs live under `codeql-graph/provenance/` by default:
 
-| File | Contents |
-| --- | --- |
-| `<query>.bqrs`, `<query>.raw.json` | CodeQL results and decoded tables |
-| `<mode>.json` | Schema 2.0.0 exports for the four flow modes: Effects, dependency positions, entities, typed edges, contextual paths, boundaries, diagnostics, and search completeness |
-| `extended-state.dot`, `.svg`, `.png`, `.html` | Graph source, images, and offline explorer |
-| `limits.json` | Export traversal budgets |
-| `run.json` | Tool versions, source hashes, database location, limits, and stage timings |
+| File                                          | Contents                                                                                                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<query>.bqrs`, `<query>.raw.json`            | CodeQL results and decoded tables                                                                                                                                      |
+| `<mode>.json`                                 | Schema 2.0.0 exports for the four flow modes: Effects, dependency positions, entities, typed edges, contextual paths, boundaries, diagnostics, and search completeness |
+| `extended-state.dot`, `.svg`, `.png`, `.html` | Graph source, images, and offline explorer                                                                                                                             |
+| `<mode>.data.js`, `viewer.js`, `viewer.css`   | Synchronously loaded analysis/SVG data and independent React assets; copy these with the report                                                                        |
+| `limits.json`                                 | Export traversal budgets                                                                                                                                               |
+| `run.json`                                    | Tool versions, source hashes, database location, limits, and stage timings                                                                                             |
 
 Database directories and the default provenance output directories are ignored
 by Git. Output coordinates are relative to the selected source root.
@@ -121,9 +125,9 @@ by Git. Output coordinates are relative to the selected source root.
 
 Analyze another source directory with a separate output directory:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1 `
-  -SourceDirectory path/to/source `
+```sh
+npm run analysis -- \
+  -SourceDirectory path/to/source \
   -OutputDirectory codeql-graph/my-analysis
 ```
 
@@ -134,23 +138,26 @@ analyzing multiple packages; imports outside that root may remain boundaries.
 `-MaxSteps`. Defaults and budget semantics are in the
 [analyzer guide](analysis/README.md#scope-and-limits).
 
+Build the viewer once with `npm run build:viewer`. Analysis and report regeneration reuse
+those assets until viewer source changes. No demo application build is needed.
 Regenerate visual formats from existing JSON without rerunning CodeQL:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/render.ps1 `
+```sh
+npm run report -- \
   -JsonPath codeql-graph/provenance/extended-state.json
 ```
 
 Use the same command with another flow mode's JSON to render that mode.
-Customize the provenance viewer in `analysis/viewer-template.html`.
+Customize the React provenance viewer in `analysis/viewer/`.
 
 ## Checks
 
 Targeted checks available without an application build or ESLint:
 
-```powershell
+```sh
 npm run typecheck:analysis
 npm run typecheck:app
+npm run typecheck:viewer
 npm run test:analysis
 ```
 
@@ -158,17 +165,17 @@ The tests cover export/path composition, traversal budgets, stable identities,
 and the independent path oracle. They do not require a CodeQL extraction.
 After generating application results, run the application-specific assertions:
 
-```powershell
+```sh
 node analysis/app-check.ts codeql-graph/provenance
 ```
 
 For a fresh fixture analysis with handwritten positive/negative source and
 path expectations:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File analysis/run.ps1 `
-  -SourceDirectory analysis/fixtures `
-  -OutputDirectory codeql-graph/provenance-fixtures `
+```sh
+npm run analysis -- \
+  -SourceDirectory analysis/fixtures \
+  -OutputDirectory codeql-graph/provenance-fixtures \
   -Expectations analysis/fixtures/expected.json
 ```
 
@@ -214,30 +221,30 @@ Effect Event invocation edges, and dashed callback capture edges.
 To regenerate the legacy graph, use a new database path (change `legacy-db` if
 it already exists):
 
-```powershell
-codeql database create codeql-db/legacy-db `
-  --language=javascript-typescript `
-  --source-root=src `
+```sh
+codeql database create codeql-db/legacy-db \
+  --language=javascript-typescript \
+  --source-root=src \
   --build-mode=none
 
-codeql query run `
-  codeql-queries/codeql-custom-queries-javascript/example.ql `
-  --database=codeql-db/legacy-db `
+codeql query run \
+  codeql-queries/codeql-custom-queries-javascript/example.ql \
+  --database=codeql-db/legacy-db \
   --output=codeql-graph/use-effects.bqrs
 
-codeql bqrs decode codeql-graph/use-effects.bqrs `
-  --result-set='#select' `
-  --format=csv `
-  --entities=all `
-  --no-titles `
+codeql bqrs decode codeql-graph/use-effects.bqrs \
+  --result-set='#select' \
+  --format=csv \
+  --entities=all \
+  --no-titles \
   --output=codeql-graph/edges.csv
 
-powershell -NoProfile -ExecutionPolicy Bypass -File codeql-graph/render-graph.ps1
+npm run report:baseline
 ```
 
 Open `codeql-graph/use-effects.html`. The renderer also writes DOT, SVG, and PNG;
-its template is `codeql-graph/viewer-template.html`. These legacy files are
-separate from the provenance reports.
+its React entrypoint is `analysis/viewer/legacy-main.tsx`. These baseline files
+are separate from the provenance reports.
 
 ## Troubleshooting stale results and database locks
 

@@ -12,7 +12,12 @@
     "preview": "vite preview",
     "typecheck:analysis": "tsc --project tsconfig.analysis.json",
     "typecheck:app": "tsc --project tsconfig.app.json --noEmit",
-    "test:analysis": "node --test analysis/*.test.ts"
+    "test:analysis": "node --test analysis/*.test.ts",
+    "analysis": "node analysis/run.ts",
+    "report": "node analysis/render.ts",
+    "report:baseline": "node codeql-graph/render-graph.ts",
+    "build:viewer": "vite build --config analysis/viewer/vite.config.ts && vite build --config analysis/viewer/vite.config.ts --mode baseline",
+    "typecheck:viewer": "tsc --project tsconfig.viewer.json"
   },
   "dependencies": {
     "react": "^19.2.8",
