@@ -1,3 +1,14 @@
 node_modules
 dist
+.vite
 package-lock.json
+
+# Generated analysis outputs and CodeQL compilation products
+codeql-db/
+codeql-results.sarif
+codeql-graph/provenance/
+codeql-graph/provenance-fixtures/
+codeql-queries/**/*.qlx
+codeql-queries/**/.cache/
+
+.migration-reference/

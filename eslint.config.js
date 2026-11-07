@@ -7,7 +7,18 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['node_modules', 'dist', 'codeql-db', '.migration-reference'] },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.vite/**',
+      'codeql-db/**',
+      '.migration-reference/**',
+      'codeql-graph/provenance/**',
+      'codeql-graph/provenance-fixtures/**',
+      'codeql-queries/**/.cache/**',
+    ],
+  },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
