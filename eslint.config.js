@@ -57,6 +57,7 @@ export default tseslint.config(
           next: '*',
         },
       ],
+
       curly: ['error', 'multi-line', 'consistent'],
       'id-length': [
         'error',
@@ -77,9 +78,8 @@ export default tseslint.config(
   },
 
   prettierConfig,
-
   {
-    files: ['**/*.tsx'],
+    files: ['**/*.{ts,tsx}'],
     rules: {
       '@stylistic/jsx-newline': [
         'error',
