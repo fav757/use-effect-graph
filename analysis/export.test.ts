@@ -13,11 +13,13 @@ test('path identity preserves transition kinds and evidence', () => {
       [{ id: 1 }, { id: 4 }, 'state-initial', ''],
       [{ id: 1 }, { id: 4 }, kind, provenance],
     ])
+
     const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
     assert.equal(
       result.paths.filter((path) => path.dependencyId.endsWith(':0')).length,
       2,
     )
+
     assert.equal(new Set(result.paths.map((path) => path.id)).size, 4)
   }
 })
@@ -30,10 +32,12 @@ test('path identity preserves meaningful contexts and merges equivalent aliases'
       'a',
       distinct ? 'another call context' : 'source',
     ])
+
     flow.pathEdges = table([
       [{ id: 1 }, { id: 4 }, 'value-flow', ''],
       [{ id: 11 }, { id: 4 }, 'value-flow', ''],
     ])
+
     flow['#select'].tuples.push(['effect', 0, { id: 11 }, { id: 4 }])
     const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
     assert.equal(
@@ -57,6 +61,7 @@ test('unique path count below or exactly at the limit is complete', () => {
         (dependency) => dependency.reason === 'path-limit',
       ),
     )
+
     assert.equal(result.paths.length, 2)
     assert(
       result.searches.every(
@@ -151,11 +156,13 @@ test('unfinished lookahead reports the actual step, depth or context budget', ()
           }[budget],
       ),
     )
+
     assert(
       !result.diagnostics.some(
         (dependency) => dependency.reason === 'path-limit',
       ),
     )
+
     assert.equal(result.truncated, true)
   }
 })
@@ -166,6 +173,7 @@ test('typed paths are deterministic under row shuffles and BQRS renumbering', ()
     [{ id: 1 }, { id: 4 }, 'state-initial', 'basis A'],
     [{ id: 1 }, { id: 4 }, 'state-update', 'basis B'],
   ])
+
   const first = exportResult(inventory, flow, sourceRoot, 'extended-state')
 
   for (let seed = 1; seed <= 12; seed++) {
@@ -215,6 +223,7 @@ test('summary grounds remain distinct after call subpaths are expanded', () => {
     [{ id: 1 }, { id: 4 }, 'call-return', 'basis B'],
     [{ id: 2 }, { id: 3 }, 'value-flow', ''],
   ])
+
   flow.subpaths = table([[{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]])
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
   assert.equal(result.paths.length, 4)
@@ -250,6 +259,7 @@ test('lookahead stops at the first additional unique path', () => {
   assert(
     result.diagnostics.some((dependency) => dependency.reason === 'path-limit'),
   )
+
   assert(
     !result.diagnostics.some(
       (dependency) => dependency.reason === 'step-limit',
@@ -263,17 +273,20 @@ test('annotation closure is independent of input row order', () => {
     ['c', 'empty', 'closure-capture', ''],
     ['dep', 'c', 'closure-capture', ''],
   ])
+
   const first = exportResult(inventory, flow, sourceRoot, 'extended-state')
   inventory.annotations.tuples.reverse()
   assert.deepEqual(
     exportResult(inventory, flow, sourceRoot, 'extended-state'),
     first,
   )
+
   assert.equal(
     first.edges.filter((edge) => edge.type === 'closure-capture').length,
     2,
   )
 })
+
 test('exactly two available paths fill a quota of two without truncation', () => {
   const { inventory, flow } = data()
   flow.pathEdges.tuples.push(
@@ -316,6 +329,7 @@ test('bounded selection is independent of aliases with identical context labels'
     [{ id: 11 }, { id: 3 }, 'value-flow', ''],
     [{ id: 3 }, { id: 4 }, 'value-flow', ''],
   ])
+
   flow['#select'] = table([
     ['effect', 0, { id: 1 }, { id: 4 }],
     ['effect', 0, { id: 11 }, { id: 4 }],
@@ -345,6 +359,7 @@ test('bounded selection is independent of aliases with identical context labels'
     )
   }
 })
+
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 const table = (tuples: unknown[][]) => ({ columns: [], tuples })
 
@@ -400,6 +415,7 @@ test('retains effects with no edges and distinct dependency positions', () => {
     new Set(result.dependencies.map((dependency) => dependency.id)).size,
     2,
   )
+
   assert.equal(result.paths.length, 2)
 
   const annotation = result.edges.find(
@@ -410,6 +426,7 @@ test('retains effects with no edges and distinct dependency positions', () => {
   assert(result.paths.every((path) => !path.edges.includes(annotation.id)))
   assert(toDot(result).includes('useEffect (empty)'))
 })
+
 test('reports cycle and depth limits while terminating', () => {
   const { inventory, flow } = data()
   flow.pathEdges.tuples.push([{ id: 2 }, { id: 1 }, 'value-flow', ''])
@@ -427,6 +444,7 @@ test('reports cycle and depth limits while terminating', () => {
     ),
   )
 })
+
 test('reports path and exploration limits', () => {
   const { inventory, flow } = data()
   flow.pathEdges.tuples.push(
@@ -448,12 +466,14 @@ test('reports path and exploration limits', () => {
 
   assert.equal(tiny.truncated, true)
 })
+
 test('expands only matched CodeQL call subpaths and bounds contexts', () => {
   const { inventory, flow } = data()
   flow.pathEdges = table([
     [{ id: 1 }, { id: 4 }, 'call-return', ''],
     [{ id: 2 }, { id: 3 }, 'value-flow', ''],
   ])
+
   flow.subpaths = table([[{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]])
   const result = exportResult(inventory, flow, sourceRoot, 'extended-state')
   assert.deepEqual(result.paths[0].nodes, ['a', 'b', 'c', 'dep'])
@@ -472,6 +492,7 @@ test('expands only matched CodeQL call subpaths and bounds contexts', () => {
     ),
   )
 })
+
 test('output is independent of CodeQL entity numbers and row order', () => {
   const { inventory, flow } = data()
   const first = exportResult(inventory, flow, sourceRoot, 'extended-state')
@@ -492,6 +513,7 @@ test('output is independent of CodeQL entity numbers and row order', () => {
     first,
   )
 })
+
 test('rejects invalid budgets and unsafe source locations', () => {
   const { inventory, flow } = data()
   assert.throws(
@@ -501,6 +523,7 @@ test('rejects invalid budgets and unsafe source locations', () => {
       }),
     /Invalid limit/,
   )
+
   inventory['#select'].tuples[0][1] = '../outside.ts:1:1:1:1'
   assert.throws(
     () => exportResult(inventory, flow, sourceRoot, 'extended-state'),
@@ -527,6 +550,7 @@ test('rejects captured-parameter paths that return through another invocation', 
       (path) => path.reason === 'mismatched-call-site',
     ),
   )
+
   contexts.callArguments = table([['a', 'b', 'dep', 'capturing-function']])
   assert.equal(
     exportResult(contexts, flow, sourceRoot, 'extended-state').paths.length,

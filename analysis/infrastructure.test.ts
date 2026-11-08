@@ -73,6 +73,7 @@ test('runner preserves defaults, legacy options, aliases and numeric bounds', ()
     assert.throws(() => parseRunOptions(args))
   }
 })
+
 test('runner passes exact analysis stages and resource arguments without PowerShell', () =>
   workspace((directory) => {
     const source = join(directory, 'custom source'),
@@ -108,12 +109,14 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
       ],
       execute,
     )
+
     assert.equal(calls.filter((call) => call.args[0] === 'query').length, 7)
     assert.equal(calls.filter((call) => call.args[0] === 'bqrs').length, 7)
     assert.equal(
       calls.filter((call) => call.args[0].endsWith('export.ts')).length,
       4,
     )
+
     assert(
       calls.some(
         (call) =>
@@ -137,6 +140,7 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
     assert.deepEqual(manifest.sourceHashes, sourceHashes(source))
     assert.equal(manifest.resultSchemaVersion, '2.0.0')
   }))
+
 test('runner rejects existing databases and output inside source before invoking tools', () =>
   workspace((directory) => {
     const source = join(directory, 'source'),
@@ -157,6 +161,7 @@ test('runner rejects existing databases and output inside source before invoking
         ),
       /outside SourceDirectory/,
     )
+
     assert.throws(
       () =>
         runAnalysis(
@@ -166,6 +171,7 @@ test('runner rejects existing databases and output inside source before invoking
       /already exists/,
     )
   }))
+
 test('source snapshots exclude node_modules and detect edits, additions and removals', () =>
   workspace((directory) => {
     mkdirSync(join(directory, 'node_modules'))
@@ -179,6 +185,7 @@ test('source snapshots exclude node_modules and detect edits, additions and remo
       () => assertSourceUnchanged(before, sourceHashes(directory)),
       /Source changed/,
     )
+
     assert.throws(() => assertSourceUnchanged(before, {}), /added or removed/)
     assert.throws(
       () =>
@@ -186,12 +193,14 @@ test('source snapshots exclude node_modules and detect edits, additions and remo
       /Source changed/,
     )
   }))
+
 test('native command failures retain the child exit code', () => {
   assert.throws(
     () => command(process.execPath, ['-e', 'process.exit(7)'], true),
     (error) => error instanceof ProcessFailure && error.exitCode === 7,
   )
 })
+
 test('pipeline aborts on native failure without accepting a run manifest', () =>
   workspace((directory) => {
     const source = join(directory, 'source'),
@@ -208,8 +217,10 @@ test('pipeline aborts on native failure without accepting a run manifest', () =>
         ),
       ProcessFailure,
     )
+
     assert.equal(existsSync(join(output, 'run.json')), false)
   }))
+
 test('data script round-trips the entire export including unknown fields and SVG', () => {
   const result = {
     schemaVersion: '2.0.0',
@@ -231,12 +242,15 @@ test('data script round-trips the entire export including unknown fields and SVG
     JSON.stringify(context.window.ANALYSIS_DATA),
     JSON.stringify(result),
   )
+
   assert.equal(
     JSON.stringify(context.window.REPORT_ASSETS),
     JSON.stringify({ svg, stem: 'custom report' }),
   )
+
   assert(!script.includes('</script>'))
 })
+
 test('report regeneration copies independent assets and loads data synchronously under relative URLs', () =>
   workspace((directory) => {
     const assets = join(directory, 'built assets')
@@ -254,28 +268,34 @@ test('report regeneration copies independent assets and loads data synchronously
       join(directory, 'custom report.svg'),
       '<svg viewBox="0 0 1 1"/>',
     )
+
     packageReport(jsonPath, assets)
     assert.equal(readFileSync(jsonPath, 'utf8'), original)
     assert.equal(
       readFileSync(join(directory, 'viewer.js'), 'utf8'),
       '/* bundle */',
     )
+
     const html = readFileSync(join(directory, 'custom report.html'), 'utf8')
     assert(
       html.indexOf('./custom%20report.data.js') < html.indexOf('./viewer.js'),
     )
+
     assert(!/type="module"|fetch\(|\{\{/.test(html))
     assert.throws(
       () => packageReport(jsonPath, join(directory, 'missing')),
       /build:viewer/,
     )
+
     writeFileSync(jsonPath, '{"schemaVersion":"invalid"}')
     assert.throws(() => readResult(jsonPath), /Unsupported/)
   }))
+
 test('baseline CSV retains quoted delimiters and node/edge classifications', () => {
   assert.deepEqual(parseCsv('a,"b,b","c""c",d,"line\nline",f\r\n'), [
     ['a', 'b,b', 'c"c', 'd', 'line\nline', 'f'],
   ])
+
   assert.throws(() => parseCsv('a,b'))
   assert.throws(() => parseCsv('"unterminated'))
 
@@ -309,12 +329,15 @@ test('baseline CSV retains quoted delimiters and node/edge classifications', () 
     connections: 2,
     files: 1,
   })
+
   assert(
     result.dot.includes('"effect" -> "event" [style=dotted, color="#c48336"]'),
   )
+
   assert(
     result.dot.includes('"event" -> "value" [style=dashed, color="#c48336"]'),
   )
+
   assert(result.dot.includes('a&lt;&amp;'))
 })
 

@@ -246,10 +246,12 @@ export function renderBaseline(directory: string, execute: Command = command) {
     join(directory, 'use-effects.data.js'),
     `window.REPORT_ASSETS = ${serialize({ svg: svg.slice(svg.indexOf('<svg')), stem: 'use-effects' })};\nwindow.BASELINE_TOTALS = ${serialize(totals)};\n`,
   )
+
   writeFileSync(
     join(directory, 'use-effects.html'),
     '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Effect map · React dependency graph</title><link rel="stylesheet" href="./viewer-baseline.css"></head><body><div id="root"></div><script src="./use-effects.data.js"></script><script src="./viewer-baseline.js"></script></body></html>\n',
   )
+
   console.log(
     `Rendered ${totals.nodes} nodes and ${totals.connections} edges across ${totals.files} files.`,
   )

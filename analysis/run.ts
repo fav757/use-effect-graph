@@ -252,6 +252,7 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
         ...resources,
       ]),
     )
+
     stage(`decode:${mode}`, () =>
       execute('codeql', [
         'bqrs',
@@ -330,6 +331,7 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
       2,
     ),
   )
+
   console.log(`Analysis written to ${output}`)
 }
 

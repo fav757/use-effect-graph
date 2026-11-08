@@ -50,6 +50,7 @@ export default tseslint.config(
           prev: [
             'multiline-block-like',
             'multiline-const',
+            'multiline-expression',
             'multiline-let',
             'multiline-var',
           ],

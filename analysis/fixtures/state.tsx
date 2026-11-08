@@ -5,8 +5,10 @@ export function State() {
   useEffect(() => {
     setValue('state-next')
   }, [])
+
   useEffect(() => {
     setValue((previous) => previous + '-suffix')
   }, [])
+
   useEffect(() => {}, [value])
 }

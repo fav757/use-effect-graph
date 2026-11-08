@@ -94,6 +94,7 @@ function assess(result: Result) {
         inventoryErrors.push(
           file + ': missing dependency ' + depSpec.expression,
         )
+
         continue
       }
 
@@ -278,9 +279,11 @@ if (!process.exitCode) {
   assert(
     enhanced.diagnostics.some((dependency) => dependency.reason === 'cycle'),
   )
+
   assert(
     enhanced.boundaries.some((boundary) => boundary.reason === 'unknown-call'),
   )
+
   assert(
     enhanced.filteredPaths.some(
       (path) => path.reason === 'mismatched-call-site',
@@ -300,6 +303,7 @@ if (!process.exitCode) {
       ),
     ),
   )
+
   assert(
     enhanced.edges
       .filter((entry) =>
@@ -322,6 +326,7 @@ if (!process.exitCode) {
         (dependency) => dependency.reason === 'depth-limit',
       ),
   )
+
   writeFileSync(
     resolve(directory, 'fixture-invariants.json'),
     JSON.stringify(

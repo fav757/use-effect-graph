@@ -181,6 +181,7 @@ function DependencyContent({
                     ? 'observation'
                     : next,
                 )
+
                 setSourceId(null)
                 onSourceChange(null)
               }}

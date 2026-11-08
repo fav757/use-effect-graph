@@ -41,6 +41,7 @@ createRoot(document.getElementById('root')!).render(
     </main>
   </>,
 )
+
 declare global {
   interface Window {
     BASELINE_TOTALS: Record<string, number>

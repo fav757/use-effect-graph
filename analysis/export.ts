@@ -505,6 +505,7 @@ export function exportResult(
       ...(callContext ? { callContext } : {}),
       ...(summary ? { summary } : {}),
     })
+
     return id
   }
 
@@ -721,6 +722,7 @@ export function exportResult(
                   returnedAt: context.site,
                   target: context.target,
                 })
+
                 rejected = true
                 break
               }
@@ -811,12 +813,14 @@ export function exportResult(
           stopReason,
           status: 'modeled',
         })
+
         boundaries.push({
           dependencyId: dep.id,
           reason: stopReason,
           entityId: source.entity,
           status: sourceRole,
         })
+
         count++
       }
 
@@ -875,6 +879,7 @@ export function exportResult(
           : 'annotation.declared-hook-dependency',
         false,
       )
+
       if (newlyReached) annotated.push(child)
     }
   }

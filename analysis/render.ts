@@ -20,6 +20,7 @@ export function renderReport(
       jsonPath.replace(/\.json$/, '.dot'),
       toDot(readResult(jsonPath)),
     )
+
     if (dotOnly) return
 
     for (const format of ['svg', 'png']) {

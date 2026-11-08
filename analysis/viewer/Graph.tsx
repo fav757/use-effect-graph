@@ -47,6 +47,7 @@ export function Graph({
       )
     }
   }, [visible, width, legacy])
+
   useEffect(() => {
     const svg = canvas.current?.querySelector('svg')
 
@@ -55,6 +56,7 @@ export function Graph({
       svg.style.height = 'auto'
     }
   }, [width, scale, svgMarkup])
+
   useEffect(() => {
     if (!data) return
 

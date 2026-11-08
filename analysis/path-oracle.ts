@@ -238,6 +238,7 @@ export function assessPaths(
         spec.id +
           ': no path for the specified Effect, dependency index and source position',
       )
+
       continue
     }
 

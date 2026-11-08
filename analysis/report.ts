@@ -61,5 +61,6 @@ export function packageReport(
     join(directory, `${stem}.data.js`),
     serializeReport(result, svg, stem),
   )
+
   writeFileSync(join(directory, `${stem}.html`), reportHtml(stem))
 }

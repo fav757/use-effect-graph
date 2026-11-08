@@ -41,6 +41,7 @@ assert(
       effectFile(dependency.effectId).endsWith('components/Users.tsx'),
   ),
 )
+
 assert(
   pathsFor('components/Users.tsx', 'debouncedQuery').some(
     (path) =>
@@ -52,9 +53,11 @@ assert(
       ),
   ),
 )
+
 checks.push(
   'debouncedQuery crosses Users, useDebouncedValue, JSX input, and App',
 )
+
 const themes = origins('App.tsx', 'theme')
 assert(themes.includes("'light'"))
 assert(!themes.includes('4') && !themes.includes('10'))
@@ -76,6 +79,7 @@ assert(
       entry.location.file.endsWith('hooks/useOnlineStatus.ts'),
   ),
 )
+
 checks.push('useOnlineStatus retains its empty-dependency Effect')
 assert(base.paths.some((path) => path.stopReason === 'react-state'))
 assert(
@@ -85,14 +89,17 @@ assert(
       entry.type.startsWith('state-update'),
   ),
 )
+
 assert(history.edges.some((edge) => edge.type === 'state-initial'))
 assert(history.edges.some((edge) => edge.type.startsWith('state-update')))
 checks.push(
   'base state boundary and extended possible state history remain separate',
 )
+
 assert(!base.truncated && !history.truncated)
 writeFileSync(
   resolve(directory, 'application-checks.json'),
   JSON.stringify({ checks }, null, 2) + '\n',
 )
+
 process.stdout.write(checks.length + ' application checks passed\n')
