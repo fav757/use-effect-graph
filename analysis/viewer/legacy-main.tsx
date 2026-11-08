@@ -33,12 +33,10 @@ createRoot(document.getElementById('root')!).render(
 
         <span>
           Export{' '}
-
           <a href="use-effects.svg" download>
             SVG
           </a>{' '}
           ·{' '}
-
           <a href="use-effects.png" download>
             PNG
           </a>

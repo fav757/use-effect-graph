@@ -89,7 +89,6 @@ export function Navigation({
                 >
                   <span className="nav-title">
                     useEffect{' '}
-
                     <span className="nav-line">
                       L{effect.location.startLine}
                     </span>

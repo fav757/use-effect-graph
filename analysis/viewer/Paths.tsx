@@ -21,21 +21,18 @@ function Transition({
         <br />
         {edge.evidence.file}:{edge.evidence.startLine}:
         {edge.evidence.startColumn}
-
         {context && (
           <>
             <br />
             Flow context: {context}
           </>
         )}
-
         {edge.summary && (
           <>
             <br />
             Call summary: {edge.summary.type} · {edge.summary.provenance}
           </>
         )}
-
         {edge.callContext && (
           <>
             <br />
