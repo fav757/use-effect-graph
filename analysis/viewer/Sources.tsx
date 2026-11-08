@@ -58,7 +58,9 @@ export function Sources({
         <h3>Value sources</h3>
         <span className="count">{list.length} sources</span>
       </div>
+
       <p className="section-copy">Where this dependency can come from.</p>
+
       <div className="source-tabs" role="group" aria-label="Source category">
         {(['origin', 'observation'] as const).map((value) => (
           <button
@@ -73,6 +75,7 @@ export function Sources({
           </button>
         ))}
       </div>
+
       <button
         className={`source-all ${!sourceId ? 'active' : ''}`}
         onClick={() => onSource(null)}
@@ -80,8 +83,10 @@ export function Sources({
         {sourceId
           ? 'Clear source filter'
           : `All ${role === 'origin' ? 'origins' : 'interfaces'}`}
+
         <Icon name="arrow" />
       </button>
+
       <div className="source-list">
         {list.map(({ entity, paths: sourcePaths }) => (
           <button
@@ -93,23 +98,28 @@ export function Sources({
           >
             <span className="source-top">
               <i className={`kind-dot ${color(entity)}`} />
+
               <span className="source-kind">
                 {names[entity.kind] ?? entity.kind}
               </span>
+
               <span className="source-count">
                 {sourcePaths.length}{' '}
                 {sourcePaths.length === 1 ? 'path' : 'paths'}
               </span>
             </span>
+
             <span className="source-expression">
               {compact(entity.expression, 50)}
             </span>
+
             <span className="source-location">
               <Icon name="file" />
               {at(entity)}
             </span>
           </button>
         ))}
+
         {!list.length && (
           <div className="no-results">No sources in this category.</div>
         )}

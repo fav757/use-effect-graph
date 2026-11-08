@@ -65,6 +65,7 @@ export function SettingsPanel({
               <option value="dark">Dark</option>
             </select>
           </label>
+
           <label>
             Results per page
             <select
@@ -76,6 +77,7 @@ export function SettingsPanel({
               <option value={6}>6</option>
             </select>
           </label>
+
           <label>
             Refresh interval
             <select
@@ -89,6 +91,7 @@ export function SettingsPanel({
               <option value={30}>30 seconds</option>
             </select>
           </label>
+
           <label className={styles.checkbox}>
             <input
               type="checkbox"

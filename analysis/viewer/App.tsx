@@ -25,8 +25,10 @@ export function App({ data, assets }: { data: Result; assets: ReportAssets }) {
         }}
         onSelect={selection.select}
       />
+
       <main className="workspace">
         <ReportHeader data={data} stem={assets.stem} />
+
         {selection.effect ? (
           <EffectPanel
             data={data}
@@ -41,12 +43,14 @@ export function App({ data, assets }: { data: Result; assets: ReportAssets }) {
             No matching Effects. Try another file or dependency.
           </div>
         )}
+
         <footer className="footer">
           <span>
             <Icon name="check" />
             {modeName(data.mode)} <span style={{ color: '#d0d5df' }}>·</span>{' '}
             Sources and paths from your analysis
           </span>
+
           <a href={`./${encodeURIComponent(assets.stem)}.json`} download>
             View analysis data ↗
           </a>

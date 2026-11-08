@@ -52,10 +52,12 @@ function App() {
         <div>
           <p className={styles.eyebrow}>Operations workspace</p>
           <h1>User activity dashboard</h1>
+
           <p className={styles.subtitle}>
             Search the directory and inspect recent account events.
           </p>
         </div>
+
         <div className={styles.connection} data-online={isOnline}>
           <span aria-hidden="true" />
           {isOnline ? 'Online' : 'Offline'}
@@ -64,6 +66,7 @@ function App() {
 
       <section className={styles.toolbar} aria-label="Directory filters">
         <QueryInput query={query} onQueryChange={handleQueryChange} />
+
         <label>
           Account status
           <select
@@ -88,6 +91,7 @@ function App() {
           selectedUserId={selectedUser?.id ?? null}
           onSelectUser={setSelectedUser}
         />
+
         <ActivityFeed
           user={selectedUser}
           autoRefresh={autoRefresh && isOnline}

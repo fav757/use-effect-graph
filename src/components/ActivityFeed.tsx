@@ -86,6 +86,7 @@ export function ActivityFeed({
           <p className={styles.kicker}>Audit trail</p>
           <h2 id="activity-title">Recent activity</h2>
         </div>
+
         {user && (
           <button
             type="button"
@@ -107,10 +108,12 @@ export function ActivityFeed({
           <div className={styles.profile}>
             <div>
               <strong>{user.name}</strong>
+
               <span>
                 {user.role} · {user.team}
               </span>
             </div>
+
             <select
               aria-label="Activity type"
               value={kind}
@@ -133,8 +136,10 @@ export function ActivityFeed({
               {visibleActivity.map((item) => (
                 <li key={item.id} data-kind={item.kind}>
                   <span aria-hidden="true" />
+
                   <div>
                     <strong>{item.description}</strong>
+
                     <time dateTime={item.occurredAt}>
                       {new Date(item.occurredAt).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -151,7 +156,9 @@ export function ActivityFeed({
             {lastUpdated
               ? `Updated at ${lastUpdated.toLocaleTimeString()}`
               : 'Waiting for activity'}
+
             {autoRefresh && ` · refreshes every ${refreshSeconds}s`}
+
             {lastAutoRefreshFilter !== null &&
               ` · last automatic refresh requested while viewing ${lastAutoRefreshFilter === 'all' ? 'all events' : `${lastAutoRefreshFilter} events`}`}
           </p>

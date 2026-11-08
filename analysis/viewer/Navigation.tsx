@@ -42,19 +42,24 @@ export function Navigation({
         <span className="brand-mark">
           <Icon name="layers" />
         </span>
+
         <span>
           effect<span style={{ fontWeight: 400, color: '#8f9aaf' }}>graph</span>
           <small> / </small>
         </span>
       </div>
+
       <div className="sidebar-heading">
         PROJECT EFFECTS <span className="counter">{data.effects.length}</span>
       </div>
+
       <div className="search">
         <Icon name="search" />
+
         <label className="sr-only" htmlFor="search">
           Search Effects by file or dependency
         </label>
+
         <input
           id="search"
           type="search"
@@ -64,6 +69,7 @@ export function Navigation({
           onChange={(event) => onSearch(event.target.value)}
         />
       </div>
+
       <nav className="effect-list" aria-label="Effects grouped by source file">
         {[...groups].map(([file, effects]) => (
           <div className="file-group" key={file}>
@@ -71,6 +77,7 @@ export function Navigation({
               <Icon name="file" />
               <span>{basename(file)}</span>
             </div>
+
             {effects.map((effect) => {
               const deps = depsFor(data, effect)
               return (
@@ -86,6 +93,7 @@ export function Navigation({
                       L{effect.location.startLine}
                     </span>
                   </span>
+
                   <span className="nav-deps">
                     {deps.length
                       ? `[${deps.map((dep) => compact(dep.expression, 30)).join(', ')}]`
@@ -100,10 +108,12 @@ export function Navigation({
             })}
           </div>
         ))}
+
         {!visible.length && (
           <div className="no-results">No matching Effects</div>
         )}
       </nav>
+
       <div className="sidebar-bottom">
         <span className="status-dot" />
         <span>{modeName(data.mode)}</span>

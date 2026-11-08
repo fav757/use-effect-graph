@@ -36,6 +36,7 @@ export function Notes({
         {filtered.length > 0 &&
           ` · ${filtered.length} call-context mismatch reports`}
       </summary>
+
       <div className="notes-content">
         {search?.pathLimitReached && (
           <p>
@@ -46,16 +47,19 @@ export function Notes({
                 : 'The path quota was filled; another budget prevented proving that enumeration is complete.'}
           </p>
         )}
+
         {reasonList.map((reason) => (
           <p key={reason}>
             <b>{reason.replaceAll('-', ' ')}.</b> {reasons[reason] ?? ''}
           </p>
         ))}
+
         {diagnostics.map((item, index) => (
           <p key={index}>
             {item.reason.replaceAll('-', ' ')} · {item.status}
           </p>
         ))}
+
         {filtered.length > 0 && (
           <p>
             {filtered.length} source/call-site mismatch reports were recorded.
@@ -63,6 +67,7 @@ export function Notes({
             excluded.
           </p>
         )}
+
         <p>
           Paths describe possible value flow. They do not infer the order of
           renders, timers, or state updates.

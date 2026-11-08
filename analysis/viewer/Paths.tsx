@@ -15,6 +15,7 @@ function Transition({
   return (
     <details className="step-proof">
       <summary>Transition evidence</summary>
+
       <div>
         {edge.rule} · {edge.status}
         <br />
@@ -68,16 +69,20 @@ function PathCard({
         <span className="trace-icon">
           <Icon name={source?.kind === 'react-state' ? 'layers' : 'route'} />
         </span>
+
         <span className="trace-name">
           <code>{compact(source?.expression, 75)}</code>
+
           <small>
             {at(source)} <span style={{ padding: '0 4px' }}>→</span>{' '}
             {compact(dependency.expression, 32)}
           </small>
         </span>
+
         <span className="step-count">{path.edges.length} steps</span>
         <Icon name="chevron" className="chevron" />
       </summary>
+
       <div className="trace-steps">
         {path.nodes.map((id, index) => {
           const entity = entities.get(id)
@@ -94,13 +99,17 @@ function PathCard({
           return (
             <div className="step" key={`${index}:${id}`}>
               <span className="step-number">{index + 1}</span>
+
               <div className="step-heading">
                 <span>{label}</span>
+
                 <span className="step-file" title={entity.location.file}>
                   {at(entity)}
                 </span>
               </div>
+
               <code>{entity.expression || entity.label}</code>
+
               {edge && (
                 <Transition
                   edge={edge}
@@ -154,15 +163,18 @@ export function Paths({
           <h3>Provenance paths</h3>
           <span className="counter">{matching.length}</span>
         </div>
+
         <span style={{ color: '#bbc2d0', fontSize: 9 }}>
           POSSIBLE VALUE FLOW
         </span>
       </div>
+
       <p className="paths-caption">
         {sourceId
           ? `Showing paths from ${compact(entities.get(sourceId)?.expression, 50)} to ${compact(dependency.expression, 40)}.`
           : `Expand a path to inspect how a source reaches ${compact(dependency.expression, 45)}.`}
       </p>
+
       <div className="trace-list">
         {matching.slice(0, limit).map((path, index) => (
           <PathCard
@@ -174,6 +186,7 @@ export function Paths({
             initiallyOpen={!!sourceId && index === 0}
           />
         ))}
+
         {!matching.length && (
           <div className="no-results">
             No modeled paths for this selection. Boundary notes explain where
@@ -181,6 +194,7 @@ export function Paths({
           </div>
         )}
       </div>
+
       {matching.length > limit && (
         <button className="load-more" onClick={() => setLimit(Infinity)}>
           Show {matching.length - limit} more paths

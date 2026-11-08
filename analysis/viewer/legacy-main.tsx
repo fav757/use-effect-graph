@@ -11,6 +11,7 @@ createRoot(document.getElementById('root')!).render(
         <h1>Effect and callback map</h1>
         <p>Trace effect dependencies and callback captures.</p>
       </div>
+
       <div className="stats">
         {Object.entries(totals).map(([label, count]) => (
           <div key={label}>
@@ -20,13 +21,16 @@ createRoot(document.getElementById('root')!).render(
         ))}
       </div>
     </header>
+
     <main>
       <Graph svgMarkup={assets.svg} visible legacy />
+
       <footer>
         <span>
           Grouped by source file · Scroll to explore · Node labels show source
           lines
         </span>
+
         <span>
           Export{' '}
           <a href="use-effects.svg" download>

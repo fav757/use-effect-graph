@@ -32,18 +32,22 @@ export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
           <span>/</span>
           <span className="current">EFFECT EXPLORER</span>
         </div>
+
         <div className="top-status">
           <span className="status-dot" />
+
           <span>
             {data.truncated ? 'Partial analysis' : 'Analysis complete'}
           </span>
         </div>
       </div>
+
       <div className="heading">
         <div>
           <h1>Effect provenance</h1>
           <p className="subtitle">Follow the values behind every dependency.</p>
         </div>
+
         <details
           className="exports"
           open={exportsOpen}
@@ -53,6 +57,7 @@ export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
             <Icon name="download" />
             Export report <span style={{ color: '#abb3c2' }}>⌄</span>
           </summary>
+
           <div className="export-menu">
             {[
               ['json', 'Structured data · JSON'],
@@ -70,12 +75,14 @@ export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
           </div>
         </details>
       </div>
+
       <section className="metrics" aria-label="Analysis totals">
         {metrics.map(([icon, count, label]) => (
           <div className="metric" key={label}>
             <div className="metric-icon">
               <Icon name={icon} />
             </div>
+
             <div>
               <strong>{count}</strong>
               <span>{label}</span>
@@ -83,6 +90,7 @@ export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
           </div>
         ))}
       </section>
+
       {data.truncated && (
         <div className="partial-note">
           Some paths reached the configured analysis limits. The displayed

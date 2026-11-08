@@ -28,8 +28,10 @@ export function EmptyEffect({
       <div className="empty-icon">
         {effect.mode === 'empty' ? '[ ]' : '···'}
       </div>
+
       <h3>{title}</h3>
       <p>{description}</p>
+
       <details className="source-code">
         <summary>View Effect source</summary>
         <pre>{entity?.expression ?? ''}</pre>

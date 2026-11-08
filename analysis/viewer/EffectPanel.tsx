@@ -37,6 +37,7 @@ export function EffectPanel({
         <div>
           <div className="effect-kicker">
             <Icon name="file" />
+
             {effect.location.file.includes('/')
               ? effect.location.file.slice(
                   0,
@@ -44,16 +45,21 @@ export function EffectPanel({
                 )
               : 'Project root'}
           </div>
+
           <div className="effect-title">
             <h2>{basename(effect.location.file)}</h2>
             <span className="line-badge">line {effect.location.startLine}</span>
           </div>
+
           <p className="effect-path">{effect.location.file}</p>
         </div>
+
         <span className="hook-tag">useEffect</span>
       </header>
+
       <div className="dependency-bar">
         <span>DEPENDENCIES</span>
+
         <div className="dependency-buttons">
           {dependencies.map((item) => (
             <button
@@ -66,6 +72,7 @@ export function EffectPanel({
               {compact(item.expression, 65)}
             </button>
           ))}
+
           {!dependencies.length && (
             <span style={{ color: '#a9a0b8', font: '11px var(--mono)' }}>
               {effect.mode === 'empty'
@@ -77,6 +84,7 @@ export function EffectPanel({
           )}
         </div>
       </div>
+
       <div className="view-tabs" role="tablist" aria-label="Report view">
         {(['trace', 'graph'] as const).map((name) => (
           <button
@@ -92,8 +100,10 @@ export function EffectPanel({
             {name === 'trace' ? 'Dependency traces' : 'Graph overview'}
           </button>
         ))}
+
         <span className="view-hint">Source → dependency → Effect</span>
       </div>
+
       <DependencyContent
         key={selectionKey}
         data={data}
@@ -102,6 +112,7 @@ export function EffectPanel({
         view={view}
         onSourceChange={(id) => setGraphSource({ selection: selectionKey, id })}
       />
+
       <div
         id="graph-view"
         role="tabpanel"
@@ -119,6 +130,7 @@ export function EffectPanel({
           visible={view === 'graph'}
         />
       </div>
+
       <Notes data={data} effect={effect} dependency={dependency} />
     </section>
   )
@@ -190,6 +202,7 @@ function DependencyContent({
                 onSourceChange(id)
               }}
             />
+
             <Paths
               key={`${role}:${sourceId ?? ''}`}
               paths={paths}

@@ -60,10 +60,12 @@ export function Users({
           <p className={styles.kicker}>Directory</p>
           <h2 id="directory-title">People</h2>
         </div>
+
         <span>{isLoading ? 'Loading…' : `${users.length} results`}</span>
       </div>
 
       {error && <p className={styles.message}>{error}</p>}
+
       {!error && !isLoading && users.length === 0 && (
         <p className={styles.message}>No users match these filters.</p>
       )}
@@ -83,10 +85,12 @@ export function Users({
                 .map((part) => part[0])
                 .join('')}
             </span>
+
             <span className={styles.identity}>
               <strong>{user.name}</strong>
               <small>{user.email}</small>
             </span>
+
             <span className={styles.metadata}>
               <small>{user.team}</small>
               <span data-status={user.status}>{user.status}</span>
@@ -103,9 +107,11 @@ export function Users({
         >
           Previous
         </button>
+
         <span>
           Page {page} of {pageCount}
         </span>
+
         <button
           type="button"
           disabled={page === pageCount}

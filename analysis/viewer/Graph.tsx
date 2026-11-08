@@ -101,9 +101,11 @@ export function Graph({
       >
         −
       </button>
+
       <output id="zoom" aria-live="polite">
         {Math.round(scale * 100)}%
       </output>
+
       <button
         aria-label="Zoom in"
         disabled={legacy && scale >= 2.5}
@@ -111,6 +113,7 @@ export function Graph({
       >
         +
       </button>
+
       <button
         onClick={() =>
           zoom(
@@ -120,6 +123,7 @@ export function Graph({
       >
         {legacy ? 'Fit width' : 'Fit all'}
       </button>
+
       {!legacy && <button onClick={() => zoom(1)}>100%</button>}
     </>
   )
@@ -133,28 +137,35 @@ export function Graph({
               <i className="swatch" />
               Effect
             </span>
+
             <span>
               <i className="swatch event" />
               Effect Event
             </span>
+
             <span>
               <i className="swatch stable" />
               Stable callback
             </span>
+
             <span>
               <i className="swatch dependency" />
               Value
             </span>
+
             <span>
               <i className="edge-key" /> dependency/source
             </span>
+
             <span>
               <i className="edge-key dotted" /> invokes
             </span>
+
             <span>
               <i className="edge-key dashed" /> captures
             </span>
           </div>
+
           <div className="controls" aria-label="Zoom controls">
             {controls}
           </div>
@@ -169,11 +180,13 @@ export function Graph({
             />
             Highlight selected dependency
           </label>
+
           <div className="graph-controls" aria-label="Graph zoom">
             {controls}
           </div>
         </div>
       )}
+
       <div
         className={legacy ? 'canvas' : 'graph-canvas'}
         id="graph-canvas"
@@ -182,6 +195,7 @@ export function Graph({
         aria-label="Whole-program graph. Scroll to explore."
         dangerouslySetInnerHTML={markup}
       />
+
       {!legacy && (
         <p className="graph-caption">
           Whole-program overview. Use provenance paths to follow a specific call
