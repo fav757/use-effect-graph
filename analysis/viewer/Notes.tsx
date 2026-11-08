@@ -33,6 +33,7 @@ export function Notes({
     <details className="notes">
       <summary>
         <Icon name="info" /> Boundaries &amp; analysis notes
+
         {filtered.length > 0 &&
           ` · ${filtered.length} call-context mismatch reports`}
       </summary>
