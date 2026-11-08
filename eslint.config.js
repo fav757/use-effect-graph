@@ -1,6 +1,6 @@
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
-import prettierRecommended from 'eslint-plugin-prettier/recommended'
+import prettierConfig from 'eslint-config-prettier/flat'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
@@ -76,7 +76,7 @@ export default tseslint.config(
     },
   },
 
-  prettierRecommended,
+  prettierConfig,
 
   {
     files: ['**/*.tsx'],
