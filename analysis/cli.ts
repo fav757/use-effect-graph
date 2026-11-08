@@ -20,6 +20,7 @@ export const command: Command = (executable, arguments_, capture = false) => {
     encoding: 'utf8',
     stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit',
   })
+
   if (child.error) throw child.error
 
   if (child.status !== 0) {
@@ -37,9 +38,11 @@ export function options(
 ) {
   const normalize = (name: string) =>
     name.replace(/^-+/, '').replaceAll('-', '').toLowerCase()
+
   const names = new Map(
     [...values, ...switches].map((name) => [normalize(name), name]),
   )
+
   const parsed: Record<string, string | boolean> = {}
 
   for (let index = 0; index < arguments_.length; index++) {

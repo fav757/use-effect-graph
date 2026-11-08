@@ -12,6 +12,7 @@ export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
     document.addEventListener('keydown', close)
     return () => document.removeEventListener('keydown', close)
   }, [])
+
   const metrics: [string, number, string][] = [
     ['layers', data.effects.length, 'React Effects'],
     ['branch', data.dependencies.length, 'Dependencies'],
@@ -22,6 +23,7 @@ export function ReportHeader({ data, stem }: { data: Result; stem: string }) {
       'Source files',
     ],
   ]
+
   return (
     <>
       <div className="topline">

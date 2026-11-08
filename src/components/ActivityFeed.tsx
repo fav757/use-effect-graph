@@ -20,9 +20,11 @@ export function ActivityFeed({
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
   const [lastAutoRefreshFilter, setLastAutoRefreshFilter] = useState<
     ActivityKind | 'all' | null
   >(null)
+
   const userId = user?.id
 
   const onAutoRefresh = useEffectEvent(() => {
@@ -69,6 +71,7 @@ export function ActivityFeed({
 
   useEffect(() => {
     if (!autoRefresh || userId == null) return
+
     const intervalId = window.setInterval(() => {
       onAutoRefresh()
     }, refreshSeconds * 1000)

@@ -47,6 +47,7 @@ test('runner preserves defaults, legacy options, aliases and numeric bounds', ()
     ],
     [96, 64, 128, 50000, 2, 6000],
   )
+
   const custom = parseRunOptions([
     '-MaxDepth',
     '7',
@@ -55,6 +56,7 @@ test('runner preserves defaults, legacy options, aliases and numeric bounds', ()
     '--threads',
     '4',
   ])
+
   assert.deepEqual(
     [custom.MaxDepth, custom.MaxContexts, custom.Threads, custom.skipRender],
     [7, 8, 4, true],
@@ -76,6 +78,7 @@ test('runner passes exact analysis stages and resource arguments without PowerSh
     const source = join(directory, 'custom source'),
       output = join(directory, 'custom output'),
       database = join(directory, 'new database')
+
     mkdirSync(source)
     writeFileSync(join(source, 'file.ts'), 'const value = 1')
     const calls: { executable: string; args: string[] }[] = []
@@ -138,6 +141,7 @@ test('runner rejects existing databases and output inside source before invoking
   workspace((directory) => {
     const source = join(directory, 'source'),
       database = join(directory, 'existing')
+
     mkdirSync(source)
     mkdirSync(database)
 
@@ -192,6 +196,7 @@ test('pipeline aborts on native failure without accepting a run manifest', () =>
   workspace((directory) => {
     const source = join(directory, 'source'),
       output = join(directory, 'output')
+
     mkdirSync(source)
     assert.throws(
       () =>
@@ -211,13 +216,16 @@ test('data script round-trips the entire export including unknown fields and SVG
     expression: '</script>\u2028\u2029',
     extra: { nested: ['quotes"', '\\', '\u{1f600}'] },
   }
+
   const svg = '<svg viewBox="0 0 100 50"><title>&amp;</title></svg>'
   const context = { window: {} as Record<string, unknown> }
+
   const script = serializeReport(
     result,
     '<?xml version="1.0"?>' + svg,
     'custom report',
   )
+
   runInNewContext(script, context)
   assert.equal(
     JSON.stringify(context.window.ANALYSIS_DATA),
@@ -236,9 +244,11 @@ test('report regeneration copies independent assets and loads data synchronously
     writeFileSync(join(assets, 'viewer.js'), '/* bundle */')
     writeFileSync(join(assets, 'viewer.css'), '/* styles */')
     const jsonPath = join(directory, 'custom report.json')
+
     const original =
       '\uFEFF' +
       JSON.stringify({ schemaVersion: '1.0.0', effects: [], unchanged: true })
+
     writeFileSync(jsonPath, original)
     writeFileSync(
       join(directory, 'custom report.svg'),
@@ -268,6 +278,7 @@ test('baseline CSV retains quoted delimiters and node/edge classifications', () 
   ])
   assert.throws(() => parseCsv('a,b'))
   assert.throws(() => parseCsv('"unterminated'))
+
   const rows = [
     [
       'effect',
@@ -286,10 +297,12 @@ test('baseline CSV retains quoted delimiters and node/edge classifications', () 
       'file:///C:/example.ts:3:1:3:2',
     ],
   ]
+
   const result = baselineDot(
     rows,
     () => 'useEffect(() => {})\nuseEffectEvent(() => {})\na',
   )
+
   assert.deepEqual(result.totals, {
     effects: 1,
     nodes: 3,
@@ -308,11 +321,13 @@ test('baseline CSV retains quoted delimiters and node/edge classifications', () 
 test('CLI error handler propagates native exit codes to its caller', () => {
   const cli = pathToFileURL(join(import.meta.dirname, 'cli.ts')).href
   const program = `import { command, main } from ${JSON.stringify(cli)}; main(() => command(process.execPath, ['-e', 'process.exit(7)'], true))`
+
   const child = spawnSync(
     process.execPath,
     ['--input-type=module', '-e', program],
     { encoding: 'utf8' },
   )
+
   assert.equal(child.status, 7)
   assert.match(child.stderr, /failed with exit code 7/)
 })

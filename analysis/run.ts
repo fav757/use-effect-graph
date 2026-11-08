@@ -22,6 +22,7 @@ import type { Command } from './cli.ts'
 import { renderReport } from './render.ts'
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+
 const defaults = {
   MaxDepth: 96,
   MaxContexts: 64,
@@ -43,12 +44,15 @@ export function parseRunOptions(arguments_: string[]) {
     ],
     ['SkipRender'],
   )
+
   const numbers = { ...defaults }
 
   for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
     const value =
       parsed[key] === undefined ? defaults[key] : Number(parsed[key])
+
     const minimum = key === 'Ram' ? 2048 : 1
+
     const maximum =
       key === 'Threads'
         ? 32
@@ -196,10 +200,12 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
   const version = JSON.parse(
     execute('codeql', ['version', '--format=json'], true),
   ) as { version: string }
+
   const queries = join(
     repository,
     'codeql-queries/codeql-custom-queries-javascript',
   )
+
   const libraryPath = execute(
     'codeql',
     ['resolve', 'library-path', `--query=${join(queries, 'extended.ql')}`],
@@ -264,6 +270,7 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
     maxPaths: config.MaxPaths,
     maxSteps: config.MaxSteps,
   }
+
   const limitsPath = join(output, 'limits.json')
   writeFileSync(limitsPath, JSON.stringify(limits))
 

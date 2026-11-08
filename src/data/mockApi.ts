@@ -114,6 +114,7 @@ export async function fetchUsers(
       [user.name, user.email, user.role, user.team].some((value) =>
         value.toLowerCase().includes(normalizedQuery),
       )
+
     return matchesQuery && (status === 'all' || user.status === status)
   })
 }

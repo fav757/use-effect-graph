@@ -9,16 +9,20 @@ import type { Bqrs } from './export.ts'
 import type { PathOracle } from './path-oracle.ts'
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
+
 const goldens = JSON.parse(
   readFileSync(join(fixtures, 'paths.expected.json'), 'utf8'),
 ) as PathOracle
+
 const required = goldens.required.find((spec) => spec.id === 'calls-left')
 assert(required)
+
 const oracle: PathOracle = {
   schemaVersion: '1.0.0',
   required: [required],
   forbidden: [],
 }
+
 const table = (tuples: unknown[][]) => ({ columns: [], tuples })
 
 function callResult() {
@@ -38,6 +42,7 @@ function callResult() {
     callArguments: table([['a', 'p', 'c', 'calls.tsx:2:1:2:62#function']]),
     callReturns: table([['r', 'c', 'calls.tsx:2:1:2:62#function']]),
   }
+
   const flow: Bqrs = {
     pathNodes: table([
       [{ id: 1 }, 'a', 'caller'],
@@ -55,6 +60,7 @@ function callResult() {
     subpaths: table([]),
     '#select': table([['effect', 0, { id: 1 }, { id: 5 }]]),
   }
+
   return exportResult(inventory, flow, fixtures, 'extended-state')
 }
 
@@ -106,9 +112,11 @@ for (const mutation of [
 
 test('source text does not substitute for the expected source position', () => {
   const result = callResult()
+
   const source = result.entities.find(
     (entity) => entity.id === result.paths[0].source,
   )!
+
   const text = source.expression
   source.location.startColumn++
   assert.equal(source.expression, text)
@@ -121,11 +129,13 @@ test('source text does not substitute for the expected source position', () => {
 
 test('forbidden path assertions reject an otherwise valid path', () => {
   const result = callResult()
+
   const forbidden: PathOracle = {
     schemaVersion: '1.0.0',
     required: [],
     forbidden: [{ ...required!, id: 'forbidden-route' }],
   }
+
   assert(
     assessPaths(result, forbidden).errors.some((error) =>
       error.includes('forbidden path'),

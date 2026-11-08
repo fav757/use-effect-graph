@@ -23,6 +23,7 @@ export function serializeReport(result: unknown, svg: string, stem: string) {
       .replaceAll('<', '\\u003c')
       .replaceAll('\u2028', '\\u2028')
       .replaceAll('\u2029', '\\u2029')
+
   return `window.ANALYSIS_DATA = ${serialize(result)};\nwindow.REPORT_ASSETS = ${serialize({ svg: svg.slice(svg.indexOf('<svg')), stem })};\n`
 }
 

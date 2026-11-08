@@ -83,12 +83,14 @@ function PathCard({
           const entity = entities.get(id)
           const edge = edges.get(path.edges[index - 1])
           if (!entity) return null
+
           const label =
             index === 0
               ? (names[entity.kind] ?? 'Source value')
               : (rules[edge?.type ?? ''] ??
                 edge?.type.replaceAll('-', ' ') ??
                 'Value flow')
+
           return (
             <div className="step" key={`${index}:${id}`}>
               <span className="step-number">{index + 1}</span>
@@ -130,6 +132,7 @@ export function Paths({
   sourceId: string | null
 }) {
   const [limit, setLimit] = useState(6)
+
   const matching = paths
     .filter(
       (path) =>
@@ -143,6 +146,7 @@ export function Paths({
         first.edges.length - second.edges.length ||
         first.id.localeCompare(second.id),
     )
+
   return (
     <section className="paths" aria-label="Provenance traces">
       <div className="paths-heading">

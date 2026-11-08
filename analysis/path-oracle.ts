@@ -168,6 +168,7 @@ export function assessPaths(
         (id, index) =>
           index > previous && entityMatches(entities.get(id), checkpoint),
       )
+
       if (index < 0) return false
       previous = index
     }
@@ -221,6 +222,7 @@ export function assessPaths(
             ))
         )
       })
+
       if (index < 0) return false
       previous = index
     }

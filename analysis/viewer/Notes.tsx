@@ -14,16 +14,20 @@ export function Notes({
   const search = data.searches?.find(
     (item) => item.dependencyId === dependency?.id,
   )
+
   const boundaries = data.boundaries.filter(
     (boundary) => boundary.dependencyId === dependency?.id,
   )
+
   const diagnostics = data.diagnostics.filter(
     (item) =>
       item.dependencyId === dependency?.id || item.dependencyId === effect.id,
   )
+
   const filtered = (data.filteredPaths ?? []).filter(
     (item) => item.dependencyId === dependency?.id,
   )
+
   const reasonList = [...new Set(boundaries.map((boundary) => boundary.reason))]
   return (
     <details className="notes">

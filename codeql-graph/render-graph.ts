@@ -8,9 +8,11 @@ import type { Command } from '../analysis/cli.ts'
 /** CodeQL's headerless RFC 4180 CSV, including quoted commas, quotes, and newlines. */
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = []
+
   let row: string[] = [],
     field = '',
     quoted = false
+
   text = text.replace(/^\uFEFF/, '')
 
   for (let index = 0; index < text.length; index++) {
@@ -55,6 +57,7 @@ export function parseCsv(text: string): string[][] {
 
 const escapeDot = (value: string) =>
   value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
+
 const escapeHtml = (value: string) =>
   value.replace(
     /[&<>"']/g,
@@ -63,6 +66,7 @@ const escapeHtml = (value: string) =>
         character
       ]!,
   )
+
 type Node = {
   id: string
   label: string
@@ -138,6 +142,7 @@ export function baselineDot(
     'node [shape=box, style="rounded,filled", margin="0.22,0.14", fontname="Segoe UI", fontsize=12, penwidth=1.2];',
     'edge [color="#9aaac2", penwidth=1.3, arrowsize=0.65];',
   ]
+
   let index = 0
 
   for (const [file, group] of [...groups].sort(([first], [second]) =>
@@ -209,6 +214,7 @@ export function renderBaseline(directory: string, execute: Command = command) {
   const { dot, totals } = baselineDot(
     parseCsv(readFileSync(join(directory, 'edges.csv'), 'utf8')),
   )
+
   writeFileSync(join(directory, 'use-effects.dot'), dot.replaceAll('\n', EOL))
 
   for (const format of ['svg', 'png']) {
@@ -221,6 +227,7 @@ export function renderBaseline(directory: string, execute: Command = command) {
   }
 
   const svg = readFileSync(join(directory, 'use-effects.svg'), 'utf8')
+
   const assets = fileURLToPath(
     new URL('../analysis/viewer/dist/', import.meta.url),
   )
@@ -234,6 +241,7 @@ export function renderBaseline(directory: string, execute: Command = command) {
 
   const serialize = (value: unknown) =>
     JSON.stringify(value).replaceAll('<', '\\u003c')
+
   writeFileSync(
     join(directory, 'use-effects.data.js'),
     `window.REPORT_ASSETS = ${serialize({ svg: svg.slice(svg.indexOf('<svg')), stem: 'use-effects' })};\nwindow.BASELINE_TOTALS = ${serialize(totals)};\n`,

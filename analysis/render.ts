@@ -39,10 +39,12 @@ export function renderReport(
 if (isMain(import.meta.url)) {
   main(() => {
     const arguments_ = process.argv.slice(2)
+
     const positional =
       arguments_[0] && !arguments_[0].startsWith('-')
         ? arguments_.shift()
         : undefined
+
     const parsed = options(arguments_, ['JsonPath'], ['html', 'dot-only'])
     const path = positional ?? parsed.JsonPath
 

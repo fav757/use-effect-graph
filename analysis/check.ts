@@ -27,9 +27,11 @@ const expectedFile = JSON.parse(readFileSync(expectedPath, 'utf8')) as Record<
   string,
   unknown
 >
+
 const expected = Object.fromEntries(
   Object.entries(expectedFile).filter(([key]) => key !== '$paths'),
 ) as Record<string, Expectation>
+
 const pathReference = expectedFile.$paths
 
 if (pathReference !== undefined && typeof pathReference !== 'string') {
@@ -42,6 +44,7 @@ const pathOracle =
         readFileSync(resolve(dirname(expectedPath), pathReference), 'utf8'),
       ) as PathOracle)
     : undefined
+
 const load = <T>(name: string): T =>
   JSON.parse(
     readFileSync(resolve(directory, name), 'utf8').replace(/^\uFEFF/, ''),
@@ -107,6 +110,7 @@ function assess(result: Result) {
             expression: dep.expression,
             source,
           }
+
           ;(sources.has(source) ? found : missing).push(link)
         }
 
@@ -153,13 +157,16 @@ for (const mode of [
 const baseline = load('baseline-units.raw.json') as {
   '#select': { tuples: [string, number, string][] }
 }
+
 const enhanced = load('extended-state.json') as Result
+
 const normalized = new Set(
   baseline['#select'].tuples.map(
     ([effect, index, source]) =>
       effect + '/dependency:' + index + '\u0000' + source,
   ),
 )
+
 const catalog = load<{ '#select': { tuples: string[][] } }>(
   'inventory.raw.json',
 )['#select'].tuples.map(
@@ -178,6 +185,7 @@ const catalog = load<{ '#select': { tuples: string[][] } }>(
       },
     },
 )
+
 const projected: Result = {
   ...enhanced,
   entities: catalog,
@@ -197,10 +205,12 @@ const projected: Result = {
       })),
   ),
 }
+
 report.baseline = assess(projected)
 report.baseline.inventoryErrors = [
   'The baseline has no standalone Effect inventory; inventory coverage is not scored.',
 ]
+
 const output = {
   schemaVersion: '2.0.0',
   unit: '(effect source position, dependency index, origin expression source position)',
@@ -208,6 +218,7 @@ const output = {
   results: report,
   pathChecks,
 }
+
 writeFileSync(
   resolve(directory, 'comparison.json'),
   JSON.stringify(output, null, 2) + '\n',
@@ -275,9 +286,11 @@ if (!process.exitCode) {
       (path) => path.reason === 'mismatched-call-site',
     ),
   )
+
   const callbacks = enhanced.dependencies.filter(
     (dependency) => dependency.expression === 'callback',
   )
+
   assert(
     callbacks.every((dependency) =>
       enhanced.paths.some(
@@ -294,6 +307,7 @@ if (!process.exitCode) {
       )
       .every((entry) => !entry.composable),
   )
+
   const limited = exportResult(
     load('inventory.raw.json'),
     load('extended-state.raw.json'),
@@ -301,6 +315,7 @@ if (!process.exitCode) {
     'extended-state',
     { maxDepth: 1 },
   )
+
   assert(
     limited.truncated &&
       limited.diagnostics.some(

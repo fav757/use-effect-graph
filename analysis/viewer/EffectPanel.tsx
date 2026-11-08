@@ -25,10 +25,12 @@ export function EffectPanel({
 }) {
   const [view, setView] = useState<'trace' | 'graph'>('trace')
   const selectionKey = `${effect.id}:${dependency?.id ?? ''}`
+
   const [graphSource, setGraphSource] = useState<{
     selection: string
     id: string | null
   } | null>(null)
+
   return (
     <section className="effect-panel" aria-label="Selected Effect">
       <header className="effect-header">
@@ -139,11 +141,14 @@ function DependencyContent({
     () => new Map(data.entities.map((entity) => [entity.id, entity])),
     [data],
   )
+
   const edges = useMemo(
     () => new Map(data.edges.map((edge) => [edge.id, edge])),
     [data],
   )
+
   const paths = pathsFor(data, dependency)
+
   const [role, setRole] = useState<SourceRole>(() =>
     paths.some((path) => path.sourceRole === 'origin')
       ? 'origin'
@@ -151,6 +156,7 @@ function DependencyContent({
         ? 'observation'
         : 'origin',
   )
+
   const [sourceId, setSourceId] = useState<string | null>(null)
   return (
     <>

@@ -25,12 +25,15 @@ export function Graph({
   const [highlight, setHighlight] = useState(true)
   // A stable object keeps React from replacing the Graphviz DOM when controls change.
   const markup = useMemo(() => ({ __html: svgMarkup }), [svgMarkup])
+
   const width =
     Number(
       /viewBox=["'][^"']*?[\s,]([\d.]+)[\s,][\d.]+["']/.exec(svgMarkup)?.[1],
     ) || 1
+
   const zoom = (value: number) =>
     setScale(Math.max(legacy ? 0.25 : 0.04, Math.min(legacy ? 2.5 : 3, value)))
+
   useEffect(() => {
     if (visible) {
       setScale(
@@ -54,9 +57,11 @@ export function Graph({
   }, [width, scale, svgMarkup])
   useEffect(() => {
     if (!data) return
+
     const paths = pathsFor(data, dependency).filter(
       (path) => !sourceId || path.source === sourceId,
     )
+
     const nodeIds = new Set(paths.flatMap((path) => path.nodes))
     const edgeIds = new Set(paths.flatMap((path) => path.edges))
     if (effect) nodeIds.add(effect.id)
@@ -84,6 +89,7 @@ export function Graph({
       edge.classList.toggle('dimmed', highlight && !edgeIds.has(edge.id))
     }
   }, [data, effect, dependency, sourceId, highlight, svgMarkup])
+
   const controls = (
     <>
       <button
@@ -115,6 +121,7 @@ export function Graph({
       {!legacy && <button onClick={() => zoom(1)}>100%</button>}
     </>
   )
+
   return (
     <>
       {legacy ? (

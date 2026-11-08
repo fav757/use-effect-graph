@@ -13,14 +13,17 @@ function App() {
   const [status, setStatus] = useState<UserStatus | 'all'>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [pageSize, setPageSize] = usePersistentState('dashboard-page-size', 4)
+
   const [theme, setTheme] = usePersistentState<'light' | 'dark'>(
     'dashboard-theme',
     'light',
   )
+
   const [refreshSeconds, setRefreshSeconds] = usePersistentState(
     'dashboard-refresh-seconds',
     10,
   )
+
   const [autoRefresh, setAutoRefresh] = useState(true)
   const isOnline = useOnlineStatus()
 

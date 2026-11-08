@@ -42,14 +42,17 @@ export type Limits = {
   maxSteps: number
 }
 export type Result = ReturnType<typeof exportResult>
+
 const defaults: Limits = {
   maxDepth: 96,
   maxContexts: 64,
   maxPaths: 128,
   maxSteps: 50000,
 }
+
 const hash = (source: string) =>
   createHash('sha256').update(source).digest('hex').slice(0, 24)
+
 const rawId = (value: unknown): string =>
   typeof value === 'string' ? value : String((value as { id: number }).id)
 
@@ -60,9 +63,11 @@ const rows = (data: Bqrs, name: string): unknown[][] => {
 
 const compare = (left: string, right: string) =>
   left < right ? -1 : left > right ? 1 : 0
+
 const unique = <T>(values: T[]): T[] => [
   ...new Map(values.map((value) => [JSON.stringify(value), value])).values(),
 ]
+
 const pairKey = (left: string, right: string) => JSON.stringify([left, right])
 
 /** Refine source-labeled neighborhoods for ordering only; never join contextual nodes. */
@@ -145,9 +150,12 @@ function contextualOrder(
         ]),
       ]),
     )
+
     const next = rank(keys)
+
     const stable =
       new Set(next.values()).size === new Set(classes.values()).size
+
     classes = next
     if (stable) break
   }
@@ -214,21 +222,26 @@ export function exportResult(
     }
 
     const lines = files.get(loc.file)!
+
     const expression = lines
       .slice(loc.startLine - 1, loc.endLine)
       .map((line, i) => {
         const first = i === 0 ? loc.startColumn - 1 : 0
+
         const last =
           loc.startLine + i === loc.endLine ? loc.endColumn : line.length
+
         return line.slice(first, last)
       })
       .join('\n')
+
     entities.set(id, { id, location: loc, kind, label, expression })
   }
 
   const effects = (rows(inventory, 'effects') as string[][])
     .map(([id, pos, mode]) => ({ id, location: location(pos), mode }))
     .sort((left, right) => left.id.localeCompare(right.id, 'en'))
+
   const dependencies = rows(inventory, 'dependencies')
     .map(([effect, index, entity]) => ({
       id: String(effect) + '/dependency:' + index,
@@ -238,6 +251,7 @@ export function exportResult(
       expression: entities.get(String(entity))?.expression ?? '',
     }))
     .sort((left, right) => left.id.localeCompare(right.id, 'en'))
+
   const nodes = new Map<string, RawNode>()
 
   for (const [id, entity, context] of rows(flow, 'pathNodes')) {
@@ -265,6 +279,7 @@ export function exportResult(
       kind: String(kind),
       provenance: String(provenance),
     }
+
     const list = adjacency.get(edge.from) ?? []
     list.push(edge)
     adjacency.set(edge.from, list)
@@ -284,6 +299,7 @@ export function exportResult(
       ret: rawId(ret),
       out: rawId(out),
     }
+
     const key = pairKey(source.arg, source.out)
     const list = subpaths.get(key) ?? []
     list.push(source)
@@ -298,6 +314,7 @@ export function exportResult(
       sink: rawId(sink),
     }),
   )
+
   const order = contextualOrder(nodes, adjacency, subpaths, pairs)
   const nodeOrder = (id: string) => order.get(id) ?? stableRaw(id)
 
@@ -337,11 +354,13 @@ export function exportResult(
       ]),
     ),
   )
+
   const used = new Set(
     effects
       .map((effect) => effect.id)
       .concat(dependencies.map((dependency) => dependency.entityId)),
   )
+
   const callEvidence = new Map<string, CallContext[]>()
 
   const addContext = (from: string, to: string, context: CallContext) => {
@@ -373,6 +392,7 @@ export function exportResult(
     callEvidence.get(
       nodes.get(edge.from)!.entity + '\u0000' + nodes.get(edge.to)!.entity,
     ) ?? []
+
   const edgeMap = new Map<
     string,
     {
@@ -389,6 +409,7 @@ export function exportResult(
       summary?: Summary
     }
   >()
+
   const paths: {
     id: string
     dependencyId: string
@@ -400,6 +421,7 @@ export function exportResult(
     stopReason: string
     status: string
   }[] = []
+
   const searches: {
     dependencyId: string
     retainedPaths: number
@@ -409,17 +431,20 @@ export function exportResult(
     steps: number
     contexts: number
   }[] = []
+
   const boundaries: {
     dependencyId: string
     reason: string
     entityId: string
     status: string
   }[] = []
+
   const diagnostics: {
     dependencyId: string
     reason: string
     status: string
   }[] = []
+
   const filteredPaths: {
     dependencyId: string
     source: string
@@ -459,6 +484,7 @@ export function exportResult(
           summary,
         ]),
       )
+
     used.add(from)
     used.add(to)
 
@@ -490,9 +516,11 @@ export function exportResult(
       'dependency-array-position:' + dep.index,
       false,
     )
+
     const relevant = pairs.filter(
       (path) => path.effect === dep.effectId && path.index === dep.index,
     )
+
     let steps = 0
     let count = 0
     let additionalPathFound = false
@@ -565,10 +593,12 @@ export function exportResult(
                 '\u0000' +
                 nodes.get(sub.par)?.entity,
             )
+
             const context =
               evidence?.length === 1
                 ? evidence[0].site
                 : stableRaw(sub.arg) + ' -> ' + stableRaw(sub.out)
+
             if (!registerContext(context)) return
 
             for (const inner of walk(sub.par, sub.ret, nextSeen, depth + 1)) {
@@ -579,6 +609,7 @@ export function exportResult(
                 provenance: 'CodeQL.PathGraph.subpaths',
                 summary: { type: edge.kind, provenance: edge.provenance },
               }
+
               const leave: RawEdge = {
                 from: sub.ret,
                 to: sub.out,
@@ -673,6 +704,7 @@ export function exportResult(
               const index = frames.findLastIndex(
                 (frame) => frame.target === context.target,
               )
+
               if (index < 0) continue
               const entered = frames[index]
 
@@ -704,6 +736,7 @@ export function exportResult(
           source.context,
           ...raw.map((edge) => nodes.get(edge.to)!.context),
         ]
+
         const transitions = raw.map((edge) => ({
           from: nodes.get(edge.from)!.entity,
           to: nodes.get(edge.to)!.entity,
@@ -718,6 +751,7 @@ export function exportResult(
             edgeContexts(edge).length === 1 ? edgeContexts(edge)[0] : undefined,
           summary: edge.summary,
         }))
+
         const key = JSON.stringify([sequence, pathContexts, transitions])
         if (dedup.has(key)) continue
         dedup.add(key)
@@ -730,6 +764,7 @@ export function exportResult(
 
         const origin = entities.get(source.entity)!
         used.add(source.entity)
+
         const ids = raw.map((entry) =>
           addEdge(
             nodes.get(entry.from)!.entity,
@@ -746,6 +781,7 @@ export function exportResult(
             entry.summary,
           ),
         )
+
         const stopReason =
           (
             {
@@ -759,9 +795,11 @@ export function exportResult(
               'property-read': 'property-observation',
             } as Record<string, string>
           )[origin.kind] ?? 'analysis-boundary'
+
         const sourceRole = ['parameter', 'property-read'].includes(origin.kind)
           ? 'observation'
           : 'origin'
+
         paths.push({
           id: 'path:' + hash(dep.id + key),
           dependencyId: dep.id,
@@ -896,6 +934,7 @@ export function exportResult(
 
 export function toDot(result: Result) {
   const quote = (value: string) => JSON.stringify(value)
+
   const html = (value: string) =>
     value
       .replaceAll('&', '&amp;')
@@ -914,10 +953,12 @@ export function toDot(result: Result) {
     'node [shape=box, style="rounded,filled", fillcolor="white", color="#dce2ec", penwidth=1.2, margin="0.18,0.13", fontname="Segoe UI", fontsize=12];',
     'edge [color="#b3bfd2", arrowsize=0.6, penwidth=1.1, fontname="Segoe UI", fontsize=10, fontcolor="#64748b"];',
   ]
+
   const effects = new Map(result.effects.map((effect) => [effect.id, effect]))
 
   for (const entity of result.entities) {
     const effect = effects.get(entity.id)
+
     const palette = effect
       ? ['#f0edff', '#c7baf9', '#6750c5']
       : entity.kind === 'react-state'
@@ -925,14 +966,18 @@ export function toDot(result: Result) {
         : entity.kind === 'unknown-call'
           ? ['#fff8e9', '#ead29f', '#a46b18']
           : ['#ffffff', '#dce2ec', '#64748b']
+
     const kind = effect
       ? 'REACT EFFECT'
       : entity.kind.replaceAll('-', ' ').toUpperCase()
+
     const text = effect
       ? 'useEffect (' + effect.mode + ')'
       : compact(entity.expression || entity.label)
+
     const file =
       entity.location.file.split('/').at(-1) + ':' + entity.location.startLine
+
     const label =
       '<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2"><TR><TD ALIGN="LEFT"><FONT COLOR="' +
       palette[2] +
@@ -943,6 +988,7 @@ export function toDot(result: Result) {
       '</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT COLOR="#8692a7" POINT-SIZE="10">' +
       html(file) +
       '</FONT></TD></TR></TABLE>'
+
     lines.push(
       quote(entity.id) +
         ' [label=<' +
@@ -967,6 +1013,7 @@ export function toDot(result: Result) {
     const annotation = ['closure-capture', 'hook-dependency'].includes(
       edge.type,
     )
+
     const special = edge.type !== 'value-flow'
     lines.push(
       quote(edge.from) +
@@ -1023,6 +1070,7 @@ if (
       ? JSON.parse(readFileSync(limitsPath, 'utf8').replace(/^\uFEFF/, ''))
       : {},
   )
+
   mkdirSync(resolve(output, '..'), { recursive: true })
   writeFileSync(output, JSON.stringify(result, null, 2) + '\n')
   writeFileSync(output.replace(/\.json$/, '.dot'), toDot(result))

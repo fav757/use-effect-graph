@@ -22,6 +22,7 @@ export function EmptyEffect({
             'Unsupported dependency array',
             'The dependency argument could not be interpreted as a fixed list. No element positions have been invented.',
           ]
+
   return (
     <div className="empty-state">
       <div className="empty-icon">

@@ -58,6 +58,7 @@ export function Icon({
       </>
     ),
   }
+
   return (
     <svg
       className={`icon ${className}`}

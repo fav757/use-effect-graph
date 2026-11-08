@@ -10,12 +10,15 @@ if (!directory) {
 
 const read = (mode: string) =>
   JSON.parse(readFileSync(resolve(directory, mode + '.json'), 'utf8')) as Result
+
 const base = read('extended')
 const history = read('extended-state')
 const entities = new Map(history.entities.map((entity) => [entity.id, entity]))
 const checks: string[] = []
+
 const effectFile = (id: string) =>
   history.effects.find((effect) => effect.id === id)?.location.file ?? ''
+
 const pathsFor = (file: string, expression: string) =>
   history.paths.filter((path) =>
     history.dependencies.some(
@@ -25,10 +28,12 @@ const pathsFor = (file: string, expression: string) =>
         effectFile(dependency.effectId).endsWith(file),
     ),
   )
+
 const origins = (file: string, expression: string) =>
   pathsFor(file, expression).map(
     (path) => entities.get(path.source)?.expression,
   )
+
 assert(
   history.dependencies.some(
     (dependency) =>

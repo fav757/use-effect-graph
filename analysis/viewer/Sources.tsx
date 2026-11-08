@@ -22,14 +22,17 @@ export function Sources({
       .filter((path) => path.sourceRole === 'origin')
       .map((path) => path.source),
   )
+
   const interfaces = new Set(
     paths
       .filter((path) => path.sourceRole !== 'origin')
       .map((path) => path.source),
   )
+
   const matching = paths.filter(
     (path) => (role === 'origin') === (path.sourceRole === 'origin'),
   )
+
   const sources = new Map<string, { entity: Entity; paths: FlowPath[] }>()
 
   for (const path of matching) {
@@ -42,11 +45,13 @@ export function Sources({
 
   const priority = (entity: Entity) =>
     entity.kind === 'react-state' ? 0 : entity.kind === 'literal' ? 1 : 2
+
   const list = [...sources.values()].sort(
     (first, second) =>
       priority(first.entity) - priority(second.entity) ||
       at(first.entity).localeCompare(at(second.entity)),
   )
+
   return (
     <section className="origins" aria-label="Dependency sources">
       <div className="section-heading">
