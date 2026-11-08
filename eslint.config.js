@@ -75,5 +75,16 @@ export default tseslint.config(
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+
   prettierRecommended,
+
+  {
+    files: ['**/*.tsx'],
+    rules: {
+      '@stylistic/jsx-newline': [
+        'error',
+        { prevent: true, allowMultilines: true },
+      ],
+    },
+  },
 )
