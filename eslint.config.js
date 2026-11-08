@@ -35,8 +35,26 @@ export default tseslint.config(
       ...reactHooks.configs.flat.recommended.rules,
       '@stylistic/padding-line-between-statements': [
         'error',
-        { blankLine: 'always', prev: '*', next: 'multiline-block-like' },
-        { blankLine: 'always', prev: 'multiline-block-like', next: '*' },
+        {
+          blankLine: 'always',
+          prev: '*',
+          next: [
+            'multiline-block-like',
+            'multiline-const',
+            'multiline-let',
+            'multiline-var',
+          ],
+        },
+        {
+          blankLine: 'always',
+          prev: [
+            'multiline-block-like',
+            'multiline-const',
+            'multiline-let',
+            'multiline-var',
+          ],
+          next: '*',
+        },
       ],
       curly: ['error', 'multi-line', 'consistent'],
       'id-length': [
