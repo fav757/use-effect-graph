@@ -19,6 +19,8 @@ export type PathCase = {
   dependencyIndex: number
   source: EntitySelector
   stopReason?: string
+  /** Exact contextual labels, authored independently; omission checks coverage only. */
+  contexts?: string[]
   via?: EntitySelector[]
   transitions?: TransitionSelector[]
 }
@@ -158,6 +160,16 @@ export function assessPaths(
 
   const pathMatches = (path: Result['paths'][number], spec: PathCase) => {
     if (spec.stopReason !== undefined && path.stopReason !== spec.stopReason) {
+      return false
+    }
+
+    if (
+      spec.contexts &&
+      (path.contexts?.length !== spec.contexts.length ||
+        spec.contexts.some(
+          (context, index) => context !== path.contexts[index],
+        ))
+    ) {
       return false
     }
 

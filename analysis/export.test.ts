@@ -557,3 +557,98 @@ test('rejects captured-parameter paths that return through another invocation', 
     2,
   )
 })
+
+for (const ambiguity of [
+  'entry site',
+  'entry target',
+  'return target',
+] as const) {
+  test(
+    'ambiguous ' + ambiguity + ' evidence is independent of row order',
+    () => {
+      const { inventory, flow } = data()
+
+      const contexts = {
+        ...inventory,
+        callArguments: table([
+          ['a', 'b', 'dep', 'f'],
+          ...(ambiguity === 'return target'
+            ? []
+            : [
+                [
+                  'a',
+                  'b',
+                  ambiguity === 'entry site' ? 'c' : 'dep',
+                  ambiguity === 'entry site' ? 'f' : 'g',
+                ],
+              ]),
+        ]),
+        callReturns: table([
+          ['b', 'dep', 'f'],
+          ...(ambiguity === 'return target' ? [['b', 'dep', 'g']] : []),
+        ]),
+      }
+
+      for (const mode of ['extended', 'extended-state']) {
+        const result = exportResult(contexts, flow, sourceRoot, mode)
+        assert.equal(result.paths.length, 0)
+        assert.equal(result.filteredPaths.length, 0)
+        assert.equal(result.truncated, true)
+        assert.equal(result.searches.length, 2)
+        assert(result.searches.every((search) => !search.complete))
+        assert.deepEqual(
+          result.diagnostics.map((diagnostic) => diagnostic.reason),
+          ['ambiguous-call-context', 'ambiguous-call-context'],
+        )
+
+        const reordered = structuredClone(contexts)
+        reordered.callArguments.tuples.reverse()
+        reordered.callReturns.tuples.reverse()
+        assert.deepEqual(
+          exportResult(reordered, flow, sourceRoot, mode),
+          result,
+        )
+      }
+    },
+  )
+}
+
+test('duplicate call evidence preserves a unique context and complete search', () => {
+  const { inventory, flow } = data()
+
+  const contexts = {
+    ...inventory,
+    callArguments: table([
+      ['a', 'b', 'dep', 'f'],
+      ['a', 'b', 'dep', 'f'],
+    ]),
+    callReturns: table([
+      ['b', 'dep', 'f'],
+      ['b', 'dep', 'f'],
+    ]),
+  }
+
+  const result = exportResult(contexts, flow, sourceRoot, 'extended-state', {
+    maxPaths: 1,
+    maxContexts: 1,
+  })
+
+  assert.equal(result.paths.length, 2)
+  assert.equal(result.truncated, false)
+  assert.deepEqual(result.diagnostics, [])
+  assert(
+    result.searches.every((search) => search.complete && search.contexts === 1),
+  )
+
+  assert.deepEqual(
+    result.edges.find((edge) => edge.from === 'a' && edge.to === 'b')
+      ?.callContext,
+    { action: 'enter', site: 'dep', target: 'f' },
+  )
+
+  assert.deepEqual(
+    result.edges.find((edge) => edge.from === 'b' && edge.to === 'dep')
+      ?.callContext,
+    { action: 'return', site: 'dep', target: 'f' },
+  )
+})

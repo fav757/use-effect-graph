@@ -19,7 +19,9 @@ assert(required)
 
 const oracle: PathOracle = {
   schemaVersion: '1.0.0',
-  required: [required],
+  required: [
+    { ...required, contexts: ['caller', 'first', 'first', 'caller', 'sink'] },
+  ],
   forbidden: [],
 }
 
@@ -74,6 +76,9 @@ test('independent path oracle accepts the authored function-return route', () =>
 for (const mutation of [
   'transition type',
   'call context',
+  'context labels',
+  'context order',
+  'context count',
   'evidence coordinates',
   'intermediate connection',
   'stop reason',
@@ -87,6 +92,18 @@ for (const mutation of [
 
     if (mutation === 'call context') {
       returning.callContext!.target = 'calls.tsx:3:1:3:24#function'
+    }
+
+    if (mutation === 'context labels') {
+      result.paths[0].contexts.fill('arbitrary-corrupted-context')
+    }
+
+    if (mutation === 'context order') {
+      result.paths[0].contexts.reverse()
+    }
+
+    if (mutation === 'context count') {
+      result.paths[0].contexts.pop()
     }
 
     if (mutation === 'intermediate connection') {
@@ -141,6 +158,34 @@ test('forbidden path assertions reject an otherwise valid path', () => {
       error.includes('forbidden path'),
     ),
   )
+})
+
+test('context expectations distinguish forbidden routes', () => {
+  const result = callResult()
+
+  const forbidden: PathOracle = {
+    schemaVersion: '1.0.0',
+    required: [],
+    forbidden: [{ ...oracle.required[0], id: 'forbidden-context-route' }],
+  }
+
+  assert.equal(assessPaths(result, forbidden).errors.length, 1)
+  result.paths[0].contexts[1] = 'another invocation'
+  assert.deepEqual(assessPaths(result, forbidden), {
+    passed: ['forbidden-context-route'],
+    errors: [],
+  })
+})
+
+test('a valid contextual route cannot hide a corrupted sibling', () => {
+  const result = callResult()
+  const corrupted = structuredClone(result.paths[0])
+  corrupted.id = 'corrupted-sibling'
+  corrupted.contexts[1] = 'another invocation'
+  result.paths.push(corrupted)
+  const assessment = assessPaths(result, oracle)
+  assert.deepEqual(assessment.passed, [])
+  assert(assessment.errors.some((error) => error.includes(corrupted.id)))
 })
 
 test('callback capture cannot be composed as a value transition', () => {

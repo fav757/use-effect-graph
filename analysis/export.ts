@@ -369,7 +369,7 @@ export function exportResult(
 
     if (
       !list.some(
-        (context) => JSON.stringify(context) === JSON.stringify(context),
+        (existing) => JSON.stringify(existing) === JSON.stringify(context),
       )
     ) {
       list.push(context)
