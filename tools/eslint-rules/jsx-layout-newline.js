@@ -11,6 +11,7 @@ export default {
           // Prettier owns spacing in mixed text content, where whitespace
           // can affect the rendered output.
           const children = descriptor.node.parent?.children ?? []
+
           if (
             children.some(
               (child) => child.type === 'JSXText' && /\S/.test(child.value),
