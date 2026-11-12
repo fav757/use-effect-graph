@@ -327,6 +327,13 @@ types, call contexts, intermediate connections and stop reasons while keeping
 the source unchanged, and also checks source positions and Effect/index
 selection.
 
+`calls-left` and `calls-right` additionally pin the exact ordered `contexts`
+labels for the pinned CodeQL library. Other experimental cases check contextual
+label coverage only; their label contents and context-to-context transitions
+are not independently validated. Unit tests also check corrupted label contents
+and order against explicitly authored expectations. Fixture coordinate tests
+check the expectations against the current TypeScript source syntax.
+
 `check.ts` writes `comparison.json` with found, missing and forbidden links
 for all modes. The unit is an Effect source position, dependency index and
 origin expression position. Fixture literal labels are unique, so handwritten

@@ -5,7 +5,6 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
-import jsxLayoutNewline from './tools/eslint-rules/jsx-layout-newline.js'
 
 export default tseslint.config(
   {
@@ -79,18 +78,4 @@ export default tseslint.config(
   },
 
   prettierConfig,
-  {
-    files: ['**/*.tsx'],
-    plugins: {
-      local: {
-        rules: { 'jsx-layout-newline': jsxLayoutNewline },
-      },
-    },
-    rules: {
-      'local/jsx-layout-newline': [
-        'error',
-        { prevent: true, allowMultilines: true },
-      ],
-    },
-  },
 )

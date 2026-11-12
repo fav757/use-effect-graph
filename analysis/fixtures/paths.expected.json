@@ -4,15 +4,23 @@
     {
       "id": "calls-left",
       "description": "first returns its first parameter; the unused argument is not a value origin.",
+      "contexts": [
+        "'left-origin' <CcAny>",
+        "value <CcSomeCall> <value >",
+        "value <CcSomeCall> <value >",
+        "first(' ... -left') <CcAny>",
+        "left <CcAny>",
+        "left"
+      ],
       "effect": {
         "file": "calls.tsx",
-        "startLine": 6,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "calls.tsx",
-        "startLine": 4,
+        "startLine": 9,
         "startColumn": 22,
         "kind": "literal"
       },
@@ -20,19 +28,19 @@
       "via": [
         {
           "file": "calls.tsx",
-          "startLine": 2,
+          "startLine": 4,
           "startColumn": 16,
           "kind": "parameter"
         },
         {
           "file": "calls.tsx",
-          "startLine": 2,
-          "startColumn": 56,
+          "startLine": 5,
+          "startColumn": 10,
           "kind": "value"
         },
         {
           "file": "calls.tsx",
-          "startLine": 4,
+          "startLine": 9,
           "startColumn": 16,
           "kind": "value"
         }
@@ -41,13 +49,13 @@
         {
           "from": {
             "file": "calls.tsx",
-            "startLine": 4,
+            "startLine": 9,
             "startColumn": 22,
             "kind": "literal"
           },
           "to": {
             "file": "calls.tsx",
-            "startLine": 2,
+            "startLine": 4,
             "startColumn": 16,
             "kind": "parameter"
           },
@@ -56,31 +64,31 @@
             "action": "enter",
             "site": {
               "file": "calls.tsx",
-              "startLine": 4,
+              "startLine": 9,
               "startColumn": 16
             },
             "target": {
               "file": "calls.tsx",
-              "startLine": 2,
+              "startLine": 4,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "calls.tsx",
-            "startLine": 2,
+            "startLine": 4,
             "startColumn": 16
           }
         },
         {
           "from": {
             "file": "calls.tsx",
-            "startLine": 2,
-            "startColumn": 56,
+            "startLine": 5,
+            "startColumn": 10,
             "kind": "value"
           },
           "to": {
             "file": "calls.tsx",
-            "startLine": 4,
+            "startLine": 9,
             "startColumn": 16,
             "kind": "value"
           },
@@ -89,18 +97,18 @@
             "action": "return",
             "site": {
               "file": "calls.tsx",
-              "startLine": 4,
+              "startLine": 9,
               "startColumn": 16
             },
             "target": {
               "file": "calls.tsx",
-              "startLine": 2,
+              "startLine": 4,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "calls.tsx",
-            "startLine": 4,
+            "startLine": 9,
             "startColumn": 16
           }
         }
@@ -109,15 +117,23 @@
     {
       "id": "calls-right",
       "description": "first returns its first parameter; the unused argument is not a value origin.",
+      "contexts": [
+        "'right-origin' <CcAny>",
+        "value <CcSomeCall> <value >",
+        "value <CcSomeCall> <value >",
+        "first(' ... right') <CcAny>",
+        "right <CcAny>",
+        "right"
+      ],
       "effect": {
         "file": "calls.tsx",
-        "startLine": 6,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "calls.tsx",
-        "startLine": 5,
+        "startLine": 10,
         "startColumn": 23,
         "kind": "literal"
       },
@@ -125,19 +141,19 @@
       "via": [
         {
           "file": "calls.tsx",
-          "startLine": 2,
+          "startLine": 4,
           "startColumn": 16,
           "kind": "parameter"
         },
         {
           "file": "calls.tsx",
-          "startLine": 2,
-          "startColumn": 56,
+          "startLine": 5,
+          "startColumn": 10,
           "kind": "value"
         },
         {
           "file": "calls.tsx",
-          "startLine": 5,
+          "startLine": 10,
           "startColumn": 17,
           "kind": "value"
         }
@@ -146,13 +162,13 @@
         {
           "from": {
             "file": "calls.tsx",
-            "startLine": 5,
+            "startLine": 10,
             "startColumn": 23,
             "kind": "literal"
           },
           "to": {
             "file": "calls.tsx",
-            "startLine": 2,
+            "startLine": 4,
             "startColumn": 16,
             "kind": "parameter"
           },
@@ -161,31 +177,31 @@
             "action": "enter",
             "site": {
               "file": "calls.tsx",
-              "startLine": 5,
+              "startLine": 10,
               "startColumn": 17
             },
             "target": {
               "file": "calls.tsx",
-              "startLine": 2,
+              "startLine": 4,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "calls.tsx",
-            "startLine": 2,
+            "startLine": 4,
             "startColumn": 16
           }
         },
         {
           "from": {
             "file": "calls.tsx",
-            "startLine": 2,
-            "startColumn": 56,
+            "startLine": 5,
+            "startColumn": 10,
             "kind": "value"
           },
           "to": {
             "file": "calls.tsx",
-            "startLine": 5,
+            "startLine": 10,
             "startColumn": 17,
             "kind": "value"
           },
@@ -194,18 +210,18 @@
             "action": "return",
             "site": {
               "file": "calls.tsx",
-              "startLine": 5,
+              "startLine": 10,
               "startColumn": 17
             },
             "target": {
               "file": "calls.tsx",
-              "startLine": 2,
+              "startLine": 4,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "calls.tsx",
-            "startLine": 5,
+            "startLine": 10,
             "startColumn": 17
           }
         }
@@ -216,13 +232,13 @@
       "description": "The initializer belongs to this invocation of useLocal; the state slot and returned tuple are mandatory checkpoints.",
       "effect": {
         "file": "custom-hooks.tsx",
-        "startLine": 10,
+        "startLine": 12,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "custom-hooks.tsx",
-        "startLine": 8,
+        "startLine": 10,
         "startColumn": 27,
         "kind": "literal"
       },
@@ -230,31 +246,31 @@
       "via": [
         {
           "file": "custom-hooks.tsx",
-          "startLine": 2,
+          "startLine": 3,
           "startColumn": 19,
           "kind": "parameter"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 38,
           "kind": "value"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 5,
+          "startLine": 6,
           "startColumn": 10,
           "kind": "value"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 8,
+          "startLine": 10,
           "startColumn": 18,
           "kind": "value"
         }
@@ -263,13 +279,13 @@
         {
           "from": {
             "file": "custom-hooks.tsx",
-            "startLine": 8,
+            "startLine": 10,
             "startColumn": 27,
             "kind": "literal"
           },
           "to": {
             "file": "custom-hooks.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 19,
             "kind": "parameter"
           },
@@ -278,51 +294,51 @@
             "action": "enter",
             "site": {
               "file": "custom-hooks.tsx",
-              "startLine": 8,
+              "startLine": 10,
               "startColumn": 18
             },
             "target": {
               "file": "custom-hooks.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "custom-hooks.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 19
           }
         },
         {
           "from": {
             "file": "custom-hooks.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 38,
             "kind": "value"
           },
           "to": {
             "file": "custom-hooks.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-initial",
           "evidence": {
             "file": "custom-hooks.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         },
         {
           "from": {
             "file": "custom-hooks.tsx",
-            "startLine": 5,
+            "startLine": 6,
             "startColumn": 10,
             "kind": "value"
           },
           "to": {
             "file": "custom-hooks.tsx",
-            "startLine": 8,
+            "startLine": 10,
             "startColumn": 18,
             "kind": "value"
           },
@@ -331,18 +347,18 @@
             "action": "return",
             "site": {
               "file": "custom-hooks.tsx",
-              "startLine": 8,
+              "startLine": 10,
               "startColumn": 18
             },
             "target": {
               "file": "custom-hooks.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "custom-hooks.tsx",
-            "startLine": 8,
+            "startLine": 10,
             "startColumn": 18
           }
         }
@@ -353,13 +369,13 @@
       "description": "The initializer belongs to this invocation of useLocal; the state slot and returned tuple are mandatory checkpoints.",
       "effect": {
         "file": "custom-hooks.tsx",
-        "startLine": 10,
+        "startLine": 12,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "custom-hooks.tsx",
-        "startLine": 9,
+        "startLine": 11,
         "startColumn": 28,
         "kind": "literal"
       },
@@ -367,31 +383,31 @@
       "via": [
         {
           "file": "custom-hooks.tsx",
-          "startLine": 2,
+          "startLine": 3,
           "startColumn": 19,
           "kind": "parameter"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 38,
           "kind": "value"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 5,
+          "startLine": 6,
           "startColumn": 10,
           "kind": "value"
         },
         {
           "file": "custom-hooks.tsx",
-          "startLine": 9,
+          "startLine": 11,
           "startColumn": 19,
           "kind": "value"
         }
@@ -400,13 +416,13 @@
         {
           "from": {
             "file": "custom-hooks.tsx",
-            "startLine": 9,
+            "startLine": 11,
             "startColumn": 28,
             "kind": "literal"
           },
           "to": {
             "file": "custom-hooks.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 19,
             "kind": "parameter"
           },
@@ -415,51 +431,51 @@
             "action": "enter",
             "site": {
               "file": "custom-hooks.tsx",
-              "startLine": 9,
+              "startLine": 11,
               "startColumn": 19
             },
             "target": {
               "file": "custom-hooks.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "custom-hooks.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 19
           }
         },
         {
           "from": {
             "file": "custom-hooks.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 38,
             "kind": "value"
           },
           "to": {
             "file": "custom-hooks.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-initial",
           "evidence": {
             "file": "custom-hooks.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         },
         {
           "from": {
             "file": "custom-hooks.tsx",
-            "startLine": 5,
+            "startLine": 6,
             "startColumn": 10,
             "kind": "value"
           },
           "to": {
             "file": "custom-hooks.tsx",
-            "startLine": 9,
+            "startLine": 11,
             "startColumn": 19,
             "kind": "value"
           },
@@ -468,18 +484,18 @@
             "action": "return",
             "site": {
               "file": "custom-hooks.tsx",
-              "startLine": 9,
+              "startLine": 11,
               "startColumn": 19
             },
             "target": {
               "file": "custom-hooks.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "custom-hooks.tsx",
-            "startLine": 9,
+            "startLine": 11,
             "startColumn": 19
           }
         }
@@ -490,13 +506,13 @@
       "description": "The initializer belongs to this invocation of useLazy; the state slot and returned tuple are mandatory checkpoints.",
       "effect": {
         "file": "lazy-state.tsx",
-        "startLine": 9,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "lazy-state.tsx",
-        "startLine": 7,
+        "startLine": 9,
         "startColumn": 26,
         "kind": "literal"
       },
@@ -504,31 +520,31 @@
       "via": [
         {
           "file": "lazy-state.tsx",
-          "startLine": 2,
+          "startLine": 3,
           "startColumn": 18,
           "kind": "parameter"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 34,
           "kind": "value"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 4,
+          "startLine": 5,
           "startColumn": 10,
           "kind": "value"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 7,
+          "startLine": 9,
           "startColumn": 18,
           "kind": "value"
         }
@@ -537,13 +553,13 @@
         {
           "from": {
             "file": "lazy-state.tsx",
-            "startLine": 7,
+            "startLine": 9,
             "startColumn": 26,
             "kind": "literal"
           },
           "to": {
             "file": "lazy-state.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 18,
             "kind": "parameter"
           },
@@ -552,51 +568,51 @@
             "action": "enter",
             "site": {
               "file": "lazy-state.tsx",
-              "startLine": 7,
+              "startLine": 9,
               "startColumn": 18
             },
             "target": {
               "file": "lazy-state.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "lazy-state.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 18
           }
         },
         {
           "from": {
             "file": "lazy-state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 34,
             "kind": "value"
           },
           "to": {
             "file": "lazy-state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-initial",
           "evidence": {
             "file": "lazy-state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         },
         {
           "from": {
             "file": "lazy-state.tsx",
-            "startLine": 4,
+            "startLine": 5,
             "startColumn": 10,
             "kind": "value"
           },
           "to": {
             "file": "lazy-state.tsx",
-            "startLine": 7,
+            "startLine": 9,
             "startColumn": 18,
             "kind": "value"
           },
@@ -605,18 +621,18 @@
             "action": "return",
             "site": {
               "file": "lazy-state.tsx",
-              "startLine": 7,
+              "startLine": 9,
               "startColumn": 18
             },
             "target": {
               "file": "lazy-state.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "lazy-state.tsx",
-            "startLine": 7,
+            "startLine": 9,
             "startColumn": 18
           }
         }
@@ -627,13 +643,13 @@
       "description": "The initializer belongs to this invocation of useLazy; the state slot and returned tuple are mandatory checkpoints.",
       "effect": {
         "file": "lazy-state.tsx",
-        "startLine": 9,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "lazy-state.tsx",
-        "startLine": 8,
+        "startLine": 10,
         "startColumn": 27,
         "kind": "literal"
       },
@@ -641,31 +657,31 @@
       "via": [
         {
           "file": "lazy-state.tsx",
-          "startLine": 2,
+          "startLine": 3,
           "startColumn": 18,
           "kind": "parameter"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 34,
           "kind": "value"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 4,
+          "startLine": 5,
           "startColumn": 10,
           "kind": "value"
         },
         {
           "file": "lazy-state.tsx",
-          "startLine": 8,
+          "startLine": 10,
           "startColumn": 19,
           "kind": "value"
         }
@@ -674,13 +690,13 @@
         {
           "from": {
             "file": "lazy-state.tsx",
-            "startLine": 8,
+            "startLine": 10,
             "startColumn": 27,
             "kind": "literal"
           },
           "to": {
             "file": "lazy-state.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 18,
             "kind": "parameter"
           },
@@ -689,51 +705,51 @@
             "action": "enter",
             "site": {
               "file": "lazy-state.tsx",
-              "startLine": 8,
+              "startLine": 10,
               "startColumn": 19
             },
             "target": {
               "file": "lazy-state.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "lazy-state.tsx",
-            "startLine": 2,
+            "startLine": 3,
             "startColumn": 18
           }
         },
         {
           "from": {
             "file": "lazy-state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 34,
             "kind": "value"
           },
           "to": {
             "file": "lazy-state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-initial",
           "evidence": {
             "file": "lazy-state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         },
         {
           "from": {
             "file": "lazy-state.tsx",
-            "startLine": 4,
+            "startLine": 5,
             "startColumn": 10,
             "kind": "value"
           },
           "to": {
             "file": "lazy-state.tsx",
-            "startLine": 8,
+            "startLine": 10,
             "startColumn": 19,
             "kind": "value"
           },
@@ -742,18 +758,18 @@
             "action": "return",
             "site": {
               "file": "lazy-state.tsx",
-              "startLine": 8,
+              "startLine": 10,
               "startColumn": 19
             },
             "target": {
               "file": "lazy-state.tsx",
-              "startLine": 2,
+              "startLine": 3,
               "startColumn": 1
             }
           },
           "evidence": {
             "file": "lazy-state.tsx",
-            "startLine": 8,
+            "startLine": 10,
             "startColumn": 19
           }
         }
@@ -764,13 +780,13 @@
       "description": "Initial state and subsequent setter values use different transitions.",
       "effect": {
         "file": "state.tsx",
-        "startLine": 6,
+        "startLine": 13,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "state.tsx",
-        "startLine": 3,
+        "startLine": 4,
         "startColumn": 38,
         "kind": "literal"
       },
@@ -778,7 +794,7 @@
       "via": [
         {
           "file": "state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         }
@@ -787,20 +803,20 @@
         {
           "from": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 38,
             "kind": "literal"
           },
           "to": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-initial",
           "evidence": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         }
@@ -811,21 +827,21 @@
       "description": "Initial state and subsequent setter values use different transitions.",
       "effect": {
         "file": "state.tsx",
-        "startLine": 6,
+        "startLine": 13,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "state.tsx",
-        "startLine": 4,
-        "startColumn": 30,
+        "startLine": 6,
+        "startColumn": 14,
         "kind": "literal"
       },
       "stopReason": "literal",
       "via": [
         {
           "file": "state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         }
@@ -834,20 +850,20 @@
         {
           "from": {
             "file": "state.tsx",
-            "startLine": 4,
-            "startColumn": 30,
+            "startLine": 6,
+            "startColumn": 14,
             "kind": "literal"
           },
           "to": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-update",
           "evidence": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         }
@@ -858,27 +874,27 @@
       "description": "The suffix contributes through the updater return expression; this is not initialization.",
       "effect": {
         "file": "state.tsx",
-        "startLine": 6,
+        "startLine": 13,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "state.tsx",
-        "startLine": 5,
-        "startColumn": 53,
+        "startLine": 10,
+        "startColumn": 39,
         "kind": "literal"
       },
       "stopReason": "literal",
       "via": [
         {
           "file": "state.tsx",
-          "startLine": 5,
-          "startColumn": 42,
+          "startLine": 10,
+          "startColumn": 28,
           "kind": "value"
         },
         {
           "file": "state.tsx",
-          "startLine": 3,
+          "startLine": 4,
           "startColumn": 10,
           "kind": "react-state"
         }
@@ -887,40 +903,40 @@
         {
           "from": {
             "file": "state.tsx",
-            "startLine": 5,
-            "startColumn": 53,
+            "startLine": 10,
+            "startColumn": 39,
             "kind": "literal"
           },
           "to": {
             "file": "state.tsx",
-            "startLine": 5,
-            "startColumn": 42,
+            "startLine": 10,
+            "startColumn": 28,
             "kind": "value"
           },
           "type": "transformation",
           "evidence": {
             "file": "state.tsx",
-            "startLine": 5,
-            "startColumn": 42
+            "startLine": 10,
+            "startColumn": 28
           }
         },
         {
           "from": {
             "file": "state.tsx",
-            "startLine": 5,
-            "startColumn": 42,
+            "startLine": 10,
+            "startColumn": 28,
             "kind": "value"
           },
           "to": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10,
             "kind": "react-state"
           },
           "type": "state-update-functional",
           "evidence": {
             "file": "state.tsx",
-            "startLine": 3,
+            "startLine": 4,
             "startColumn": 10
           }
         }
@@ -931,13 +947,13 @@
       "description": "useCallback returns the callback identity; captured values do not become its value origins.",
       "effect": {
         "file": "memo.tsx",
-        "startLine": 6,
+        "startLine": 7,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "memo.tsx",
-        "startLine": 5,
+        "startLine": 6,
         "startColumn": 32,
         "kind": "function-creation"
       },
@@ -945,7 +961,7 @@
       "via": [
         {
           "file": "memo.tsx",
-          "startLine": 5,
+          "startLine": 6,
           "startColumn": 20,
           "kind": "value"
         }
@@ -954,13 +970,13 @@
         {
           "from": {
             "file": "memo.tsx",
-            "startLine": 5,
+            "startLine": 6,
             "startColumn": 32,
             "kind": "function-creation"
           },
           "to": {
             "file": "memo.tsx",
-            "startLine": 5,
+            "startLine": 6,
             "startColumn": 20,
             "kind": "value"
           },
@@ -968,7 +984,7 @@
           "rule": "extension.react-callback-identity",
           "evidence": {
             "file": "memo.tsx",
-            "startLine": 5,
+            "startLine": 6,
             "startColumn": 20
           }
         }
@@ -980,13 +996,13 @@
       "id": "calls-no-cross-left",
       "effect": {
         "file": "calls.tsx",
-        "startLine": 6,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "calls.tsx",
-        "startLine": 4,
+        "startLine": 9,
         "startColumn": 22,
         "kind": "literal"
       }
@@ -995,13 +1011,13 @@
       "id": "calls-no-cross-right",
       "effect": {
         "file": "calls.tsx",
-        "startLine": 6,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "calls.tsx",
-        "startLine": 5,
+        "startLine": 10,
         "startColumn": 23,
         "kind": "literal"
       }
@@ -1010,13 +1026,13 @@
       "id": "useLocal-no-cross-left",
       "effect": {
         "file": "custom-hooks.tsx",
-        "startLine": 10,
+        "startLine": 12,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "custom-hooks.tsx",
-        "startLine": 8,
+        "startLine": 10,
         "startColumn": 27,
         "kind": "literal"
       }
@@ -1025,13 +1041,13 @@
       "id": "useLocal-no-cross-right",
       "effect": {
         "file": "custom-hooks.tsx",
-        "startLine": 10,
+        "startLine": 12,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "custom-hooks.tsx",
-        "startLine": 9,
+        "startLine": 11,
         "startColumn": 28,
         "kind": "literal"
       }
@@ -1040,13 +1056,13 @@
       "id": "useLazy-no-cross-left",
       "effect": {
         "file": "lazy-state.tsx",
-        "startLine": 9,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "lazy-state.tsx",
-        "startLine": 7,
+        "startLine": 9,
         "startColumn": 26,
         "kind": "literal"
       }
@@ -1055,13 +1071,13 @@
       "id": "useLazy-no-cross-right",
       "effect": {
         "file": "lazy-state.tsx",
-        "startLine": 9,
+        "startLine": 11,
         "startColumn": 3
       },
       "dependencyIndex": 0,
       "source": {
         "file": "lazy-state.tsx",
-        "startLine": 8,
+        "startLine": 10,
         "startColumn": 27,
         "kind": "literal"
       }
@@ -1070,13 +1086,13 @@
       "id": "callback-no-captured-origin",
       "effect": {
         "file": "memo.tsx",
-        "startLine": 6,
+        "startLine": 7,
         "startColumn": 3
       },
       "dependencyIndex": 1,
       "source": {
         "file": "memo.tsx",
-        "startLine": 3,
+        "startLine": 4,
         "startColumn": 20,
         "kind": "literal"
       }
@@ -1086,13 +1102,13 @@
     {
       "from": {
         "file": "memo.tsx",
-        "startLine": 5,
+        "startLine": 6,
         "startColumn": 38,
         "kind": "value"
       },
       "to": {
         "file": "memo.tsx",
-        "startLine": 5,
+        "startLine": 6,
         "startColumn": 32,
         "kind": "function-creation"
       },
@@ -1102,13 +1118,13 @@
     {
       "from": {
         "file": "memo.tsx",
-        "startLine": 5,
+        "startLine": 6,
         "startColumn": 49,
         "kind": "value"
       },
       "to": {
         "file": "memo.tsx",
-        "startLine": 5,
+        "startLine": 6,
         "startColumn": 20,
         "kind": "value"
       },

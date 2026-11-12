@@ -366,23 +366,23 @@ const table = (tuples: unknown[][]) => ({ columns: [], tuples })
 function data() {
   const inventory = {
     '#select': table([
-      ['effect', 'assignments.tsx:6:3:6:36', 'value', 'useEffect'],
-      ['a', 'assignments.tsx:3:17:3:35', 'literal', 'origin'],
-      ['b', 'assignments.tsx:4:18:4:22', 'value', 'first'],
-      ['c', 'assignments.tsx:5:17:5:22', 'value', 'second'],
-      ['dep', 'assignments.tsx:6:24:6:28', 'value', 'third'],
-      ['empty', 'arrays.tsx:3:3:3:26', 'value', 'empty effect'],
+      ['effect', 'assignments.tsx:7:3:7:36', 'value', 'useEffect'],
+      ['a', 'assignments.tsx:4:17:4:35', 'literal', 'origin'],
+      ['b', 'assignments.tsx:5:18:5:22', 'value', 'first'],
+      ['c', 'assignments.tsx:6:17:6:22', 'value', 'second'],
+      ['dep', 'assignments.tsx:7:24:7:28', 'value', 'third'],
+      ['empty', 'arrays.tsx:4:3:4:26', 'value', 'empty effect'],
     ]),
     effects: table([
-      ['effect', 'assignments.tsx:6:3:6:36', 'literal'],
-      ['empty', 'arrays.tsx:3:3:3:26', 'empty'],
+      ['effect', 'assignments.tsx:7:3:7:36', 'literal'],
+      ['empty', 'arrays.tsx:4:3:4:26', 'empty'],
     ]),
     dependencies: table([
-      ['effect', 0, 'dep', 'assignments.tsx:6:24:6:28'],
-      ['effect', 1, 'dep', 'assignments.tsx:6:24:6:28'],
+      ['effect', 0, 'dep', 'assignments.tsx:7:24:7:28'],
+      ['effect', 1, 'dep', 'assignments.tsx:7:24:7:28'],
     ]),
     annotations: table([
-      ['dep', 'a', 'closure-capture', 'assignments.tsx:3:17:3:35'],
+      ['dep', 'a', 'closure-capture', 'assignments.tsx:4:17:4:35'],
     ]),
   }
 
