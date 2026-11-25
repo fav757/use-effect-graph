@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import type { PointerEvent } from 'react'
 import type { Dependency, Effect, Result } from './types.ts'
 import { basename, pathsFor } from './utils.ts'
@@ -32,7 +39,12 @@ export function Graph({
     left: number
     top: number
   } | null>(null)
-  const zoomCenter = useRef<{ x: number; y: number } | null>(null)
+  const zoomAnchor = useRef<{
+    graphX: number
+    graphY: number
+    clientX: number
+    clientY: number
+  } | null>(null)
   const [manualScale, setManualScale] = useState<number | null>(null)
   const [fitScale, setFitScale] = useState(1)
   const scale = manualScale ?? fitScale
@@ -54,7 +66,7 @@ export function Graph({
   const maxScale = legacy ? 2.5 : 3
   const interactive = Boolean(onEffect)
 
-  function zoom(value: number) {
+  function zoom(value: number, pointer?: { clientX: number; clientY: number }) {
     const next = Math.max(minScale, Math.min(maxScale, value))
     if (next === scale) return
 
@@ -64,9 +76,14 @@ export function Graph({
     if (!legacy && viewport && svg) {
       const bounds = viewport.getBoundingClientRect()
       const graph = svg.getBoundingClientRect()
-      zoomCenter.current = {
-        x: (bounds.left + viewport.clientWidth / 2 - graph.left) / scale,
-        y: (bounds.top + viewport.clientHeight / 2 - graph.top) / scale,
+      const clientX = pointer?.clientX ?? bounds.left + viewport.clientWidth / 2
+      const clientY = pointer?.clientY ?? bounds.top + viewport.clientHeight / 2
+
+      zoomAnchor.current = {
+        graphX: (clientX - graph.left) / scale,
+        graphY: (clientY - graph.top) / scale,
+        clientX,
+        clientY,
       }
     }
 
@@ -79,10 +96,17 @@ export function Graph({
       return
     }
 
-    zoomCenter.current = null
+    zoomAnchor.current = null
     setManualScale(null)
     canvas.current?.scrollTo(0, 0)
   }
+
+  const handleWheelZoom = useEffectEvent((event: WheelEvent) => {
+    if (!event.ctrlKey || !event.deltaY) return
+
+    event.preventDefault()
+    zoom(event.deltaY < 0 ? scale * 1.3 : scale / 1.3, event)
+  })
 
   function effectAt(target: EventTarget) {
     const node = target instanceof Element ? target.closest('.node') : null
@@ -151,7 +175,7 @@ export function Graph({
   useLayoutEffect(() => {
     if (!fitRequest) return
 
-    zoomCenter.current = null
+    zoomAnchor.current = null
     setManualScale(null)
     canvas.current?.scrollTo(0, 0)
   }, [fitRequest])
@@ -193,23 +217,27 @@ export function Graph({
     svg.style.width = `${width * scale}px`
     svg.style.height = 'auto'
 
-    if (zoomCenter.current) {
-      const bounds = viewport.getBoundingClientRect()
+    const anchor = zoomAnchor.current
+
+    if (anchor) {
       const graph = svg.getBoundingClientRect()
       viewport.scrollBy(
-        graph.left +
-          zoomCenter.current.x * scale -
-          bounds.left -
-          viewport.clientWidth / 2,
-        graph.top +
-          zoomCenter.current.y * scale -
-          bounds.top -
-          viewport.clientHeight / 2,
+        graph.left + anchor.graphX * scale - anchor.clientX,
+        graph.top + anchor.graphY * scale - anchor.clientY,
       )
 
-      zoomCenter.current = null
+      zoomAnchor.current = null
     }
   }, [width, scale, svgMarkup])
+
+  useEffect(() => {
+    const viewport = canvas.current
+    if (!visible || legacy || !viewport) return
+
+    const onWheel = (event: WheelEvent) => handleWheelZoom(event)
+    viewport.addEventListener('wheel', onWheel, { passive: false })
+    return () => viewport.removeEventListener('wheel', onWheel)
+  }, [visible, legacy])
 
   useEffect(() => {
     if (!interactive) return
@@ -353,7 +381,8 @@ export function Graph({
       {!legacy && (
         <div className="graph-caption">
           <p>
-            Drag or scroll to pan. Select a useEffect node to open its traces.
+            Ctrl + mouse wheel to zoom. Drag to pan. Select a useEffect node to
+            open its traces.
           </p>
 
           <div className="graph-key" role="group" aria-label="Graph legend">
