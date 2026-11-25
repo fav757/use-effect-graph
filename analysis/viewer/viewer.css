@@ -886,24 +886,21 @@ h3 {
   line-height: 1.8;
 }
 .source-code {
-  margin: 20px auto 0;
-  text-align: left;
-  max-width: 700px;
+  margin: 12px 16px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  color: #99a4b6;
-  font-size: 11px;
+  color: var(--ink);
+  font-size: 0.875rem;
 }
 .source-code summary {
   cursor: pointer;
   padding: 10px 13px;
 }
 .source-code pre {
-  font-size: 11px;
+  font-size: 0.8125rem;
   padding: 15px;
   border-top: 1px solid var(--line);
   background: #fafbfe;
-  color: #7c889f;
 }
 .no-results {
   padding: 30px 12px;

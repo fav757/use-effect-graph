@@ -4,7 +4,7 @@ import { EmptyEffect } from './EmptyEffect.tsx'
 import { Sources } from './Sources.tsx'
 import { Paths } from './Paths.tsx'
 import { Notes } from './Notes.tsx'
-import type { Dependency, Effect, Result, SourceRole } from './types.ts'
+import type { Dependency, Effect, Entity, Result, SourceRole } from './types.ts'
 import { basename, compact, pathsFor } from './utils.ts'
 
 export function EffectPanel({
@@ -23,6 +23,13 @@ export function EffectPanel({
   onShowGraph: (sourceId: string | null) => void
 }) {
   const selectionKey = `${effect.id}:${dependency?.id ?? ''}`
+
+  const entities = useMemo(
+    () => new Map(data.entities.map((entity) => [entity.id, entity])),
+    [data],
+  )
+
+  const effectSource = entities.get(effect.id)?.expression
 
   const [graphSource, setGraphSource] = useState<{
     selection: string
@@ -93,9 +100,19 @@ export function EffectPanel({
         </div>
       </div>
 
+      {effectSource && (
+        <details className="source-code" key={effect.id}>
+          <summary>View Effect source</summary>
+          <pre>
+            <code>{effectSource}</code>
+          </pre>
+        </details>
+      )}
+
       <DependencyContent
         key={selectionKey}
         data={data}
+        entities={entities}
         effect={effect}
         dependency={dependency}
         onSourceChange={(id) => setGraphSource({ selection: selectionKey, id })}
@@ -108,20 +125,17 @@ export function EffectPanel({
 
 function DependencyContent({
   data,
+  entities,
   effect,
   dependency,
   onSourceChange,
 }: {
   data: Result
+  entities: Map<string, Entity>
   effect: Effect
   dependency?: Dependency
   onSourceChange: (id: string | null) => void
 }) {
-  const entities = useMemo(
-    () => new Map(data.entities.map((entity) => [entity.id, entity])),
-    [data],
-  )
-
   const edges = useMemo(
     () => new Map(data.edges.map((edge) => [edge.id, edge])),
     [data],
@@ -174,6 +188,6 @@ function DependencyContent({
       />
     </div>
   ) : (
-    <EmptyEffect effect={effect} entity={entities.get(effect.id)} />
+    <EmptyEffect effect={effect} />
   )
 }

@@ -1,12 +1,6 @@
-import type { Effect, Entity } from './types.ts'
+import type { Effect } from './types.ts'
 
-export function EmptyEffect({
-  effect,
-  entity,
-}: {
-  effect: Effect
-  entity?: Entity
-}) {
+export function EmptyEffect({ effect }: { effect: Effect }) {
   const [title, description] =
     effect.mode === 'empty'
       ? [
@@ -31,11 +25,6 @@ export function EmptyEffect({
 
       <h3>{title}</h3>
       <p>{description}</p>
-
-      <details className="source-code">
-        <summary>View Effect source</summary>
-        <pre>{entity?.expression ?? ''}</pre>
-      </details>
     </div>
   )
 }
