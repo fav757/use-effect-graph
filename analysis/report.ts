@@ -1,9 +1,10 @@
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Result } from './export.ts'
 
 const defaultAssets = fileURLToPath(new URL('./viewer/dist/', import.meta.url))
+const defaultSource = fileURLToPath(new URL('../src/', import.meta.url))
 
 export function readResult(path: string): Result {
   const result = JSON.parse(
@@ -17,14 +18,19 @@ export function readResult(path: string): Result {
   return result
 }
 
-export function serializeReport(result: unknown, svg: string, stem: string) {
+export function serializeReport(
+  result: unknown,
+  svg: string,
+  stem: string,
+  sourceDirectory?: string,
+) {
   const serialize = (value: unknown) =>
     JSON.stringify(value)
       .replaceAll('<', '\\u003c')
       .replaceAll('\u2028', '\\u2028')
       .replaceAll('\u2029', '\\u2029')
 
-  return `window.ANALYSIS_DATA = ${serialize(result)};\nwindow.REPORT_ASSETS = ${serialize({ svg: svg.slice(svg.indexOf('<svg')), stem })};\n`
+  return `window.ANALYSIS_DATA = ${serialize(result)};\nwindow.REPORT_ASSETS = ${serialize({ svg: svg.slice(svg.indexOf('<svg')), stem, sourceDirectory })};\n`
 }
 
 export function reportHtml(stem: string) {
@@ -35,6 +41,7 @@ export function reportHtml(stem: string) {
 export function packageReport(
   jsonPath: string,
   assetsDirectory = defaultAssets,
+  sourceDirectory = defaultSource,
 ) {
   for (const asset of ['viewer.js', 'viewer.css']) {
     if (!existsSync(join(assetsDirectory, asset))) {
@@ -59,7 +66,7 @@ export function packageReport(
 
   writeFileSync(
     join(directory, `${stem}.data.js`),
-    serializeReport(result, svg, stem),
+    serializeReport(result, svg, stem, resolve(sourceDirectory)),
   )
 
   writeFileSync(join(directory, `${stem}.html`), reportHtml(stem))

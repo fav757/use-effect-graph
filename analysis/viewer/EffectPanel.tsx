@@ -4,6 +4,7 @@ import { EmptyEffect } from './EmptyEffect.tsx'
 import { Sources } from './Sources.tsx'
 import { Paths } from './Paths.tsx'
 import { Notes } from './Notes.tsx'
+import { SourceLink } from './SourceLink.tsx'
 import type { Dependency, Effect, Entity, Result, SourceRole } from './types.ts'
 import { basename, compact, pathsFor } from './utils.ts'
 
@@ -56,7 +57,11 @@ export function EffectPanel({
             <span className="line-badge">line {effect.location.startLine}</span>
           </div>
 
-          <p className="effect-path">{effect.location.file}</p>
+          <p className="effect-path">
+            <SourceLink location={effect.location}>
+              {effect.location.file}
+            </SourceLink>
+          </p>
         </div>
 
         <button

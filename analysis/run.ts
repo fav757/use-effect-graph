@@ -298,7 +298,13 @@ export function runAnalysis(arguments_: string[], execute: Command = command) {
 
   if (!config.skipRender) {
     stage('graphviz', () =>
-      renderReport(join(output, 'extended-state.json'), execute),
+      renderReport(
+        join(output, 'extended-state.json'),
+        execute,
+        false,
+        false,
+        source,
+      ),
     )
   }
 

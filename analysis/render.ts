@@ -10,6 +10,7 @@ export function renderReport(
   execute: Command = command,
   htmlOnly = false,
   dotOnly = false,
+  sourceDirectory?: string,
 ) {
   if (!jsonPath.endsWith('.json')) {
     throw new Error('Expected a .json result path')
@@ -33,7 +34,7 @@ export function renderReport(
     }
   }
 
-  packageReport(jsonPath)
+  packageReport(jsonPath, undefined, sourceDirectory)
   console.log(`Graph viewer: ${jsonPath.replace(/\.json$/, '.html')}`)
 }
 
@@ -46,12 +47,16 @@ if (isMain(import.meta.url)) {
         ? arguments_.shift()
         : undefined
 
-    const parsed = options(arguments_, ['JsonPath'], ['html', 'dot-only'])
+    const parsed = options(
+      arguments_,
+      ['JsonPath', 'SourceDirectory'],
+      ['html', 'dot-only'],
+    )
     const path = positional ?? parsed.JsonPath
 
     if (typeof path !== 'string') {
       throw new Error(
-        'Usage: node analysis/render.ts result.json (or -JsonPath result.json) [--html | --dot-only]',
+        'Usage: node analysis/render.ts result.json (or -JsonPath result.json) [--html | --dot-only] [-SourceDirectory path]',
       )
     }
 
@@ -60,6 +65,9 @@ if (isMain(import.meta.url)) {
       command,
       parsed.html === true,
       parsed['dot-only'] === true,
+      typeof parsed.SourceDirectory === 'string'
+        ? parsed.SourceDirectory
+        : undefined,
     )
   })
 }

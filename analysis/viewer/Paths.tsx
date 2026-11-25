@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon } from './Icon.tsx'
+import { SourceLink } from './SourceLink.tsx'
 import type { Dependency, Edge, Entity, FlowPath, SourceRole } from './types.ts'
 import { at, compact, names, rules } from './utils.ts'
 
@@ -19,8 +20,10 @@ function Transition({
       <div>
         {edge.rule} · {edge.status}
         <br />
-        {edge.evidence.file}:{edge.evidence.startLine}:
-        {edge.evidence.startColumn}
+        <SourceLink location={edge.evidence}>
+          {edge.evidence.file}:{edge.evidence.startLine}:
+          {edge.evidence.startColumn}
+        </SourceLink>
         {context && (
           <>
             <br />
@@ -103,9 +106,9 @@ function PathCard({
               <div className="step-heading">
                 <span>{label}</span>
 
-                <span className="step-file" title={entity.location.file}>
+                <SourceLink className="step-file" location={entity.location}>
                   {at(entity)}
-                </span>
+                </SourceLink>
               </div>
 
               <code>{entity.expression || entity.label}</code>

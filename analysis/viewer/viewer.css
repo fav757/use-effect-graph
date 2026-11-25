@@ -453,6 +453,11 @@ h2 {
   color: #a0a9b8;
   margin-top: 6px;
 }
+.source-link {
+  color: #1b4d8e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .dependency-bar {
   display: flex;
   align-items: center;
