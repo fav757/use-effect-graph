@@ -50,15 +50,17 @@ database path and stage timings. Query times include compilation and caching;
 they are measurements of that run rather than controlled benchmarks.
 Use `-SkipRender` without Graphviz.
 
-Open `codeql-graph/provenance/extended-state.html` for the offline Effect
-explorer. Search by file or dependency, select a dependency and source, then
-expand a provenance path to inspect its code and transition evidence. Origins
-and intermediate interfaces have separate filters. Empty and unsupported
-dependency arrays remain visible in the navigation.
+Open `codeql-graph/provenance/extended-state.html` to see the full dependency
+graph. Use **Fit all**, zoom, and drag to explore. Select a `useEffect` node
+or open **Effect traces** to inspect provenance paths. The traces view supports
+search by file or dependency, source filters, and expandable paths with code
+and transition evidence. It also lists effects with empty and unsupported
+dependency arrays.
 
-The Graph overview tab highlights the selected dependency and provides zoom
-controls. The export menu links to the unchanged JSON and the full SVG/PNG
-graph. The React viewer lives in `analysis/viewer/`; the baseline graph has a separate React entrypoint with its original styles. Regenerate the report directly from JSON:
+Use **Highlight on graph** to show the selected dependency and source in the
+graph, then **Show all nodes** to restore the full view. The export menu links
+to JSON, SVG, and PNG. The React viewer lives in `analysis/viewer/`. Regenerate
+the report directly from JSON with the following command.
 
 ```sh
 npm run report -- \

@@ -73,9 +73,9 @@ npm run analysis
 ```
 
 Open **`codeql-graph/provenance/extended-state.html`** in a browser. The offline
-explorer lets you search Effects and dependencies, select sources, inspect
-ordered paths and transition evidence, and view the graph with zoom controls.
-Its export menu links to JSON, SVG, and PNG files.
+viewer opens on the full dependency graph with zoom and pan controls. Select a
+`useEffect` node or open **Effect traces** to inspect sources, ordered paths,
+and transition evidence. The export menu links to JSON, SVG, and PNG files.
 
 The runner performs:
 

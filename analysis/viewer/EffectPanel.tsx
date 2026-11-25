@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Icon } from './Icon.tsx'
 import { EmptyEffect } from './EmptyEffect.tsx'
-import { Graph } from './Graph.tsx'
 import { Sources } from './Sources.tsx'
 import { Paths } from './Paths.tsx'
 import { Notes } from './Notes.tsx'
@@ -10,20 +9,19 @@ import { basename, compact, pathsFor } from './utils.ts'
 
 export function EffectPanel({
   data,
-  svg,
   effect,
   dependencies,
   dependency,
   onDependency,
+  onShowGraph,
 }: {
   data: Result
-  svg: string
   effect: Effect
   dependencies: Dependency[]
   dependency?: Dependency
   onDependency: (index: number) => void
+  onShowGraph: (sourceId: string | null) => void
 }) {
-  const [view, setView] = useState<'trace' | 'graph'>('trace')
   const selectionKey = `${effect.id}:${dependency?.id ?? ''}`
 
   const [graphSource, setGraphSource] = useState<{
@@ -54,11 +52,21 @@ export function EffectPanel({
           <p className="effect-path">{effect.location.file}</p>
         </div>
 
-        <span className="hook-tag">useEffect</span>
+        <button
+          className="show-graph"
+          onClick={() =>
+            onShowGraph(
+              graphSource?.selection === selectionKey ? graphSource.id : null,
+            )
+          }
+        >
+          <Icon name="branch" />
+          Highlight on graph
+        </button>
       </header>
 
       <div className="dependency-bar">
-        <span>DEPENDENCIES</span>
+        <span>Dependencies</span>
 
         <div className="dependency-buttons">
           {dependencies.map((item) => (
@@ -85,51 +93,13 @@ export function EffectPanel({
         </div>
       </div>
 
-      <div className="view-tabs" role="tablist" aria-label="Report view">
-        {(['trace', 'graph'] as const).map((name) => (
-          <button
-            key={name}
-            className={`view-tab ${view === name ? 'active' : ''}`}
-            id={`${name}-tab`}
-            role="tab"
-            aria-selected={view === name}
-            aria-controls={`${name}-view`}
-            onClick={() => setView(name)}
-          >
-            <Icon name={name === 'trace' ? 'route' : 'grid'} />
-            {name === 'trace' ? 'Dependency traces' : 'Graph overview'}
-          </button>
-        ))}
-
-        <span className="view-hint">Source → dependency → Effect</span>
-      </div>
-
       <DependencyContent
         key={selectionKey}
         data={data}
         effect={effect}
         dependency={dependency}
-        view={view}
         onSourceChange={(id) => setGraphSource({ selection: selectionKey, id })}
       />
-
-      <div
-        id="graph-view"
-        role="tabpanel"
-        aria-labelledby="graph-tab"
-        hidden={view !== 'graph'}
-      >
-        <Graph
-          svgMarkup={svg}
-          data={data}
-          effect={effect}
-          dependency={dependency}
-          sourceId={
-            graphSource?.selection === selectionKey ? graphSource.id : null
-          }
-          visible={view === 'graph'}
-        />
-      </div>
 
       <Notes data={data} effect={effect} dependency={dependency} />
     </section>
@@ -140,13 +110,11 @@ function DependencyContent({
   data,
   effect,
   dependency,
-  view,
   onSourceChange,
 }: {
   data: Result
   effect: Effect
   dependency?: Dependency
-  view: 'trace' | 'graph'
   onSourceChange: (id: string | null) => void
 }) {
   const entities = useMemo(
@@ -159,7 +127,7 @@ function DependencyContent({
     [data],
   )
 
-  const paths = pathsFor(data, dependency)
+  const paths = useMemo(() => pathsFor(data, dependency), [data, dependency])
 
   const [role, setRole] = useState<SourceRole>(() =>
     paths.some((path) => path.sourceRole === 'origin')
@@ -170,53 +138,42 @@ function DependencyContent({
   )
 
   const [sourceId, setSourceId] = useState<string | null>(null)
-  return (
-    <>
-      <div
-        id="trace-view"
-        role="tabpanel"
-        aria-labelledby="trace-tab"
-        hidden={view !== 'trace'}
-      >
-        {dependency ? (
-          <div className="trace-layout">
-            <Sources
-              paths={paths}
-              entities={entities}
-              role={role}
-              sourceId={sourceId}
-              onRole={(next) => {
-                setRole(
-                  next === 'origin' &&
-                    paths.length > 0 &&
-                    !paths.some((path) => path.sourceRole === 'origin')
-                    ? 'observation'
-                    : next,
-                )
+  return dependency ? (
+    <div className="trace-layout">
+      <Sources
+        paths={paths}
+        entities={entities}
+        role={role}
+        sourceId={sourceId}
+        onRole={(next) => {
+          setRole(
+            next === 'origin' &&
+              paths.length > 0 &&
+              !paths.some((path) => path.sourceRole === 'origin')
+              ? 'observation'
+              : next,
+          )
 
-                setSourceId(null)
-                onSourceChange(null)
-              }}
-              onSource={(id) => {
-                setSourceId(id)
-                onSourceChange(id)
-              }}
-            />
+          setSourceId(null)
+          onSourceChange(null)
+        }}
+        onSource={(id) => {
+          setSourceId(id)
+          onSourceChange(id)
+        }}
+      />
 
-            <Paths
-              key={`${role}:${sourceId ?? ''}`}
-              paths={paths}
-              dependency={dependency}
-              entities={entities}
-              edges={edges}
-              role={role}
-              sourceId={sourceId}
-            />
-          </div>
-        ) : (
-          <EmptyEffect effect={effect} entity={entities.get(effect.id)} />
-        )}
-      </div>
-    </>
+      <Paths
+        key={`${role}:${sourceId ?? ''}`}
+        paths={paths}
+        dependency={dependency}
+        entities={entities}
+        edges={edges}
+        role={role}
+        sourceId={sourceId}
+      />
+    </div>
+  ) : (
+    <EmptyEffect effect={effect} entity={entities.get(effect.id)} />
   )
 }

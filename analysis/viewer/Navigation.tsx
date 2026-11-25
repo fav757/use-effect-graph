@@ -1,6 +1,6 @@
 import { Icon } from './Icon.tsx'
 import type { Effect, Result } from './types.ts'
-import { basename, compact, depsFor, modeName } from './utils.ts'
+import { basename, compact, depsFor } from './utils.ts'
 
 export function visibleEffects(data: Result, search: string) {
   return data.effects.filter((effect) =>
@@ -38,19 +38,8 @@ export function Navigation({
 
   return (
     <aside className="sidebar" aria-label="Effect navigation">
-      <div className="brand">
-        <span className="brand-mark">
-          <Icon name="layers" />
-        </span>
-
-        <span>
-          effect<span style={{ fontWeight: 400, color: '#8f9aaf' }}>graph</span>
-          <small> / </small>
-        </span>
-      </div>
-
       <div className="sidebar-heading">
-        PROJECT EFFECTS <span className="counter">{data.effects.length}</span>
+        Project effects <span className="counter">{data.effects.length}</span>
       </div>
 
       <div className="search">
@@ -113,11 +102,6 @@ export function Navigation({
           <div className="no-results">No matching Effects</div>
         )}
       </nav>
-
-      <div className="sidebar-bottom">
-        <span className="status-dot" />
-        <span>{modeName(data.mode)}</span>
-      </div>
     </aside>
   )
 }
